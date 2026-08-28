@@ -1627,9 +1627,9 @@ let selectedAppIconFile = null;
 function previewAppIcon(event){
   const file = event.target.files[0];
   if (!file) return;
-  const MAX_BYTES = 2 * 1024 * 1024; // ໄອຄອນນ້ອຍ ຈຳກັດ 2MB ພໍ
+  const MAX_BYTES = 4 * 1024 * 1024; // ປັບໃຫ້ເທົ່າກັບ Apps Script 4MB
   if (file.size > MAX_BYTES){
-    alert('ໄອຄອນໃຫຍ່ເກີນໄປ (ສູງສຸດ 2MB) ກະລຸນາເລືອກຮູບອື່ນ');
+    alert('ໄອຄອນໃຫຍ່ເກີນໄປ (ສູງສຸດ 4MB) ກະລຸນາເລືອກຮູບອື່ນ');
     event.target.value = '';
     return;
   }
@@ -1812,9 +1812,9 @@ let selectedBookCoverFile = null;
 function previewBookCover(event){
   const file = event.target.files[0];
   if (!file) return;
-  const MAX_BYTES = 3 * 1024 * 1024;
+  const MAX_BYTES = 4 * 1024 * 1024;
   if (file.size > MAX_BYTES){
-    alert('ຮູບໃຫຍ່ເກີນໄປ (ສູງສຸດ 3MB) ກະລຸນາເລືອກຮູບອື່ນ');
+    alert('ຮູບໃຫຍ່ເກີນໄປ (ສູງສຸດ 4MB) ກະລຸນາເລືອກຮູບອື່ນ');
     event.target.value = '';
     return;
   }
@@ -2019,7 +2019,7 @@ async function renderRooms() {
   const results = await Promise.all(legacyRooms.map(async function(room) { return [room, await callAPI('getRosterDirectory', { room: room, nameQuery: '', idQuery: '', parentQuery: '' })]; }));
   list.innerHTML = results.map(function(pair) {
     const room = pair[0], res = pair[1], total = res && !res.error ? (res.totalInRoom || 0) : 0;
-    return '<div class="room-card" onclick="showRoomScores(\'' + legacyEscape(room) + '\')"><div class="room-top"><div class="room-name">ຫ້ອງ ' + legacyEscape(room) + '</div><button class="dl-btn small">👥 ເບິ່ງນັກຮຽນ</button></div><div class="room-stats"><div class="stat-item"><span class="dot total"></span>ທັງໝົດ <span class="stat-num">' + total + '</span></div></div></div>';
+    return '<div class="room-card" onclick="showRoomScores(\'' + legacyEscape(room) + '\')"><div class="room-top"><div class="room-name">ຫ້ອງ ' + legacyEscape(room) + '</div><div style="display:flex;gap:5px;"><button class="dl-btn small" onclick="event.stopPropagation(); showRoomScores(\'' + legacyEscape(room) + '\')">👥</button><button class="dl-btn small" style="background:#167c45;" onclick="event.stopPropagation(); showClassScores(\'' + legacyEscape(room) + '\')">📊</button></div></div><div class="room-stats"><div class="stat-item"><span class="dot total"></span>ທັງໝົດ <span class="stat-num">' + total + '</span></div></div></div>';
   }).join('');
 }
 
@@ -2157,6 +2157,56 @@ async function studentShowMyBook(){
   monthlyModal('<h2 style="margin-top:0;">📘 ປຶ້ມຕິດຕາມຂອງຂ້ອຍ</h2><div class="student-sheet-wrap"><table class="student-sheet"><thead><tr><th>ກຸ່ມວິຊາ</th><th>ວິຊາ</th>'+headers+'</tr></thead><tbody>'+rows+'</tbody></table></div><div class="student-no-download">ເບິ່ງໄດ້ຢ່າງດຽວ — ບໍ່ມີປຸ່ມດາວໂຫຼດ ຫຼື ແກ້ໄຂ</div>');
 }
 function downloadPDF(filename){const element=document.getElementById('reportCardContent');if(!element||!window.html2pdf)return;html2pdf().set({margin:0.28,filename:(filename||'report')+'.pdf',html2canvas:{scale:2},pagebreak:{mode:['css','legacy'],avoid:['tr']},jsPDF:{unit:'in',format:'a4',orientation:'landscape'}}).from(element).save();}
+
+async function showClassScores(room) {
+  const overlay = document.getElementById('detailOverlay');
+  overlay.innerHTML = '<div class="detail-overlay"><div class="detail-card"><div class="detail-header"><div class="detail-name">📊 ກຳລັງໂຫຼດຄະແນນຫ້ອງ ' + legacyEscape(room) + '…</div><button class="close-btn" onclick="closeDetail()">✕</button></div></div></div>';
+  
+  const monthsRes = await callAPI('getClassMonths', { room: room });
+  if (!monthsRes || monthsRes.error || !monthsRes.months || !monthsRes.months.length) {
+    overlay.innerHTML = '<div class="detail-overlay"><div class="detail-card"><div class="detail-header"><div class="detail-name">📊 ຄະແນນຫ້ອງ ' + legacyEscape(room) + '</div><button class="close-btn" onclick="closeDetail()">✕</button></div><div class="empty">ບໍ່ພົບຂໍ້ມູນຄະແນນ</div></div></div>';
+    return;
+  }
+  
+  const months = monthsRes.months;
+  const monthButtons = months.map(m => `<button class="month-card" onclick="loadClassMonthScores('${legacyEscape(room)}', '${legacyEscape(m)}')">📅 ${legacyEscape(m)}</button>`).join('');
+  
+  overlay.innerHTML = `
+    <div class="detail-overlay" onclick="if(event.target===this)closeDetail()">
+      <div class="detail-card" style="max-width:95vw;">
+        <div class="detail-header">
+          <div class="detail-name">📊 ຄະແນນລວມຫ້ອງ ${legacyEscape(room)}</div>
+          <button class="close-btn" onclick="closeDetail()">✕</button>
+        </div>
+        <div class="month-cards" style="margin-bottom:15px;">${monthButtons}</div>
+        <div id="classMonthTableHost" class="report-table-wrap" style="overflow:auto; max-height:60vh;">
+          <div class="empty">ເລືອກເດືອນເພື່ອເບິ່ງຄະແນນ</div>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  if (months.length > 0) loadClassMonthScores(room, months[0]);
+}
+
+async function loadClassMonthScores(room, month) {
+  const host = document.getElementById('classMonthTableHost');
+  host.innerHTML = '<div class="empty">ກຳລັງໂຫຼດ…</div>';
+  
+  const res = await callAPI('getClassScores', { room: room, month: month });
+  if (!res || res.error) { host.innerHTML = '<div class="empty">ບໍ່ສາມາດໂຫຼດຂໍ້ມູນໄດ້</div>'; return; }
+  
+  const header = (res.header || []).map(h => `<th>${legacyEscape(h)}</th>`).join('');
+  const rows = (res.rows || []).map(row => `<tr>${row.map(c => `<td>${legacyEscape(c)}</td>`).join('')}</tr>`).join('');
+  
+  host.innerHTML = `
+    <div style="margin-bottom:10px; font-weight:800; color:var(--navy-950);">📅 ເດືອນ ${legacyEscape(month)}</div>
+    <table class="report-table" style="font-size:11px;">
+      <thead><tr>${header}</tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+  `;
+}
 </script>
 
 <style id="report-template-style">
