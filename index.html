@@ -2254,8 +2254,9 @@ async function loadClassMonthScores(room, month) {
   .class-scores-table thead th { height:120px; vertical-align:bottom; padding-bottom:10px; background:#f0f4f7; }
   /* ຫົວຂໍ້ວິຊາແນວຕັ້ງ */
   .class-scores-table thead th:nth-child(n+3) { writing-mode:vertical-rl; transform:rotate(180deg); white-space:nowrap; text-align:left; width:30px; min-width:30px; font-size:9px; }
-  .class-scores-table td:nth-child(1) { width:40px; }
-  .class-scores-table td:nth-child(2) { width:180px; text-align:left; padding-left:5px; font-weight:bold; white-space:nowrap; }
+  .class-scores-table td:nth-child(1) { width:30px; } /* ລ/ດ */
+  .class-scores-table td:nth-child(2) { width:140px; text-align:left; padding-left:5px; font-weight:bold; white-space:nowrap; } /* ລາຍຊື່ */
+  .class-scores-table td:nth-child(3) { width:25px; font-size:8.5px; } /* ເພດ ຫຍໍ້ໃຫ້ແຄບລົງຕື່ມ */
   .class-scores-table tr:nth-child(even) { background:#f9f9f9; }
 
   #reportCardContent.report-template .legacy-score-edit { width:100%; box-sizing:border-box; border:0; background:#fffbe8; text-align:center; font-size:8px; padding:0; min-width:0; }
