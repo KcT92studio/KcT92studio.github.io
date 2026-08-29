@@ -1987,6 +1987,8 @@ async function legacyLoadRooms() {
 
 function legacySelectedRoom() { const select = document.getElementById('legacyRoomSelect'); return select && select.value ? select.value : (legacyRooms[0] || ''); }
 
+let fullRosterCache = {}; // Cache ລາຍຊື່ທັງໝົດແຍກຕາມຫ້ອງ
+
 async function renderSearch(force) {
   if (!legacyCanBrowse()) return;
   const room = legacySelectedRoom();
@@ -1995,20 +1997,36 @@ async function renderSearch(force) {
   const parentQuery = (document.getElementById('parentInput').value || '').trim();
   const list = document.getElementById('searchList');
   if (!room) return;
-  if (!force && !nameQuery && !idQuery && !parentQuery) {
-    document.getElementById('roomCountSearch').textContent = '0'; document.getElementById('studentCountSearch').textContent = '0';
-    list.innerHTML = '<div class="empty">🔍 ກະລຸນາພິມຄຳຄົ້ນຫາ (ຊື່, ລະຫັດ, ຫຼື ຊື່ພໍ່/ແມ່)</div>'; return;
+
+  // ຖ້າຫ້ອງປ່ຽນ ຫຼື ຍັງບໍ່ມີຂໍ້ມູນໃນ Cache, ໃຫ້ໂຫຼດລາຍຊື່ທັງໝົດມາໄວ້ກ່ອນ
+  if (!fullRosterCache[room] || force) {
+    list.innerHTML = '<div class="empty">ກຳລັງໂຫຼດລາຍຊື່ທັງໝົດໃນຫ້ອງ…</div>';
+    const res = await callAPI('getRosterDirectory', { room: room });
+    if (!res || res.error) { list.innerHTML = '<div class="empty">ບໍ່ສາມາດໂຫຼດຂໍ້ມູນໄດ້</div>'; return; }
+    fullRosterCache[room] = res.students || [];
   }
-  const sequence = ++legacySearchSequence;
-  list.innerHTML = '<div class="empty">ກຳລັງຄົ້ນຫາ…</div>';
-  const res = await callAPI('getRosterDirectory', { room: room, nameQuery: nameQuery, idQuery: idQuery, parentQuery: parentQuery });
-  if (sequence !== legacySearchSequence) return;
-  if (!res || res.error) { list.innerHTML = '<div class="empty">ບໍ່ສາມາດຄົ້ນຫາຂໍ້ມູນໄດ້</div>'; return; }
-  legacyStudents = res.students || [];
-  document.getElementById('roomCountSearch').textContent = legacyStudents.length ? '1' : '0';
-  document.getElementById('studentCountSearch').textContent = legacyStudents.length;
-  if (!legacyStudents.length) { list.innerHTML = '<div class="empty">ບໍ່ພົບຂໍ້ມູນ</div>'; return; }
-  list.innerHTML = legacyStudents.map(function(student) {
+
+  const students = fullRosterCache[room];
+  
+  // ກັ່ນຕອງຂໍ້ມູນໃນ Browser ທັນທີ (Smart Search)
+  const searchKey = (val) => String(val || '').toLowerCase().replace(/[\s\.,\-_/()]+/g, '');
+  const nQ = searchKey(nameQuery), iQ = searchKey(idQuery), pQ = searchKey(parentQuery);
+  
+  const filtered = students.filter(s => {
+    return (!nQ || searchKey(s.firstName + ' ' + s.lastName).indexOf(nQ) >= 0) &&
+           (!iQ || searchKey(s.studentId).indexOf(iQ) >= 0) &&
+           (!pQ || searchKey(s.father + ' ' + s.mother).indexOf(pQ) >= 0);
+  });
+
+  document.getElementById('roomCountSearch').textContent = filtered.length ? '1' : '0';
+  document.getElementById('studentCountSearch').textContent = filtered.length;
+
+  if (!filtered.length) {
+    list.innerHTML = '<div class="empty">ບໍ່ພົບຂໍ້ມູນ</div>';
+    return;
+  }
+
+  list.innerHTML = filtered.map(function(student) {
     const male = String(student.gender || '').toLowerCase().includes('ຊາຍ') || String(student.gender || '').toLowerCase() === 'male';
     return '<div class="card" onclick="showDetail(\'' + legacyEscape(student.ref) + '\')"><div class="gender-badge ' + (male ? 'boy' : 'girl') + '">' + (male ? '♂' : '♀') + '</div><div><div class="card-name">' + legacyEscape(legacyDisplayName(student)) + '</div><div class="card-meta">' + legacyEscape(student.room) + ' · ' + legacyEscape(student.studentId || '-') + '</div></div></div>';
   }).join('');
