@@ -2128,10 +2128,6 @@ function doAccessRequest() { const name = (document.getElementById('nameReqInput
 <script id="student-months-module">
 let studentMonthsCache = [];
 let studentProfileCache = null;
-const SCORE_TEMPLATE_SUBJECTS = [['ກຸ່ມພາສາ','ພາສາລາວ-ວັນນະຄະດີ'],['ກຸ່ມພາສາ','ຄະນິດສາດ'],['ກຸ່ມພາສາ','ສຶກສາພົນລະເມືອງ'],['ວິທະຍາສາດທຳມະຊາດ','ຟີຊິກສາດ'],['ວິທະຍາສາດທຳມະຊາດ','ເຄມີສາດ'],['ວິທະຍາສາດທຳມະຊາດ','ຊີວະສາດ'],['ວິທະຍາສາດສັງຄົມ','ພູມສາດ'],['ວິທະຍາສາດສັງຄົມ','ປະຫວັດສາດ'],['ວິທະຍາສາດສັງຄົມ','ເຕັກໂນໂລຊີ (ICT)'],['ວິທະຍາສາດສັງຄົມ','ພື້ນຖານວິຊາຊີບ'],['ສິລະປະສຶກສາ','ສິລະປະດົນຕີ'],['ສິລະປະສຶກສາ','ສິລະປະກຳ'],['ພາສາຕ່າງປະເທດ','ພາສາອັງກິດ'],['ພາສາຕ່າງປະເທດ','ພາສາຝຣັ່ງ'],['ພາສາຕ່າງປະເທດ','ພາສາ.........'],['ພລະ-ປ້ອງກັນຊາດ','ພລະສຶກສາ'],['ພລະ-ປ້ອງກັນຊາດ','ປ້ອງກັນຊາດ'],['ກຸ່ມພາສາບາລີ','ທັມມະ'],['ກຸ່ມພາສາບາລີ','ວິນັຍ'],['ກຸ່ມພາສາບາລີ','ແຕ່ງ, ແປບາລີ'],['ກຸ່ມພາສາບາລີ','ແປພຸດທະປະຫວັດ'],['ກິດຈະກຳ','ຄະແນນອອກແຮງງານ'],['ກິດຈະກຳ','ຄະແນນຄຸນສົມບັດ'],['ສະຖິຕິ','ຈຳນວນວັນຂາດຮຽນ'],['ສະຖິຕິ','ຈັດທີ']];
-const SCORE_TEMPLATE_COLUMNS = ['09','10','11','12','Avg I','Exam I','Tot I','02','03','04','05','Avg II','Exam II','Tot II','Year','Fix','Note'];
-function buildTrackingTable(report, editable){const vals=(report.subjects||[]).map(x=>x&&x.scores||[]);const head=SCORE_TEMPLATE_COLUMNS.map(x=>'<th>'+monthlyEsc(x)+'</th>').join('');const body=SCORE_TEMPLATE_SUBJECTS.map((p,i)=>'<tr><td>'+monthlyEsc(p[0])+'</td><td>'+monthlyEsc(p[1])+'</td>'+SCORE_TEMPLATE_COLUMNS.map((_,k)=>{const v=vals[i]&&vals[i][k]||'';return '<td>'+(editable?'<input class="legacy-score-edit" data-subject="'+i+'" data-column="'+k+'" value="'+monthlyEsc(v)+'">':monthlyEsc(v))+'</td>';}).join('')+'</tr>').join('');return '<table class="student-sheet report-template-table"><thead><tr><th>ກຸ່ມວິຊາ</th><th>ວິຊາ</th>'+head+'</tr></thead><tbody>'+body+'</tbody></table>';}
-function buildClassScoreTable(res){const head=SCORE_TEMPLATE_SUBJECTS.map(x=>'<th>'+legacyEscape(x[1])+'</th>').join('');const body=(res.students||[]).map((s,i)=>'<tr><td>'+(i+1)+'</td><td>'+legacyEscape(s.name||'')+'</td><td>'+legacyEscape(s.gender||'')+'</td>'+SCORE_TEMPLATE_SUBJECTS.map((_,k)=>'<td>'+legacyEscape((s.scores||[])[k]||'')+'</td>').join('')+'</tr>').join('');return '<table class="report-table class-scores-table"><thead><tr><th>ລ/ດ</th><th>ຊື່–ນາມສະກຸນ</th><th>ເພດ</th>'+head+'</tr></thead><tbody>'+body+'</tbody></table>';}
 function monthlyEsc(value){const e=document.createElement('div');e.textContent=value==null?'':String(value);return e.innerHTML;}
 function monthlyClose(){const modal=document.getElementById('studentMonthlyModal');if(modal)modal.remove();}
 function monthlyModal(content){monthlyClose();const wrap=document.createElement('div');wrap.id='studentMonthlyModal';wrap.className='student-modal';wrap.innerHTML='<div class="student-modal-card"><button class="student-modal-close" onclick="monthlyClose()">×</button>'+content+'</div>';wrap.addEventListener('click',function(event){if(event.target===wrap)monthlyClose();});document.body.appendChild(wrap);}
@@ -2178,7 +2174,9 @@ function studentShowProfile(){
 async function studentShowMyBook(){
   monthlyModal('<div class="student-no-download">ກຳລັງໂຫຼດປຶ້ມຕິດຕາມ…</div>');
   const res=await callAPI('getMyReport',{});if(!res||res.error){monthlyModal('<div class="student-no-download">ບໍ່ພົບປຶ້ມຕິດຕາມ</div>');return;}
-  monthlyModal('<h2 style="margin-top:0;">📘 ປຶ້ມຕິດຕາມຂອງຂ້ອຍ</h2><div class="student-sheet-wrap">'+buildTrackingTable(res, false)+'</div><div class="student-no-download">ເບິ່ງໄດ້ຢ່າງດຽວ — ບໍ່ມີປຸ່ມດາວໂຫຼດ ຫຼື ແກ້ໄຂ</div>');
+  const headers=(res.columns||[]).map(function(x){return '<th>'+monthlyEsc(x)+'</th>';}).join('');
+  const rows=(res.subjects||[]).map(function(item){return '<tr><td>'+monthlyEsc(item.group)+'</td><td>'+monthlyEsc(item.subject)+'</td>'+item.scores.map(function(x){return '<td>'+monthlyEsc(x)+'</td>';}).join('')+'</tr>';}).join('');
+  monthlyModal('<h2 style="margin-top:0;">📘 ປຶ້ມຕິດຕາມຂອງຂ້ອຍ</h2><div class="student-sheet-wrap"><table class="student-sheet"><thead><tr><th>ກຸ່ມວິຊາ</th><th>ວິຊາ</th>'+headers+'</tr></thead><tbody>'+rows+'</tbody></table></div><div class="student-no-download">ເບິ່ງໄດ້ຢ່າງດຽວ — ບໍ່ມີປຸ່ມດາວໂຫຼດ ຫຼື ແກ້ໄຂ</div>');
 }
 function downloadPDF(filename){const element=document.getElementById('reportCardContent');if(!element||!window.html2pdf)return;html2pdf().set({margin:0.28,filename:(filename||'report')+'.pdf',html2canvas:{scale:2},pagebreak:{mode:['css','legacy'],avoid:['tr']},jsPDF:{unit:'in',format:'a4',orientation:'landscape'}}).from(element).save();}
 
@@ -2220,7 +2218,18 @@ async function loadClassMonthScores(room, month) {
   const res = await callAPI('getClassScores', { room: room, month: month });
   if (!res || res.error) { host.innerHTML = '<div class="empty">ບໍ່ສາມາດໂຫຼດຂໍ້ມູນໄດ້</div>'; return; }
   
-  host.innerHTML = '<div style="margin-bottom:10px; font-weight:800; color:var(--navy-950);">📅 ເດືອນ '+legacyEscape(month)+'</div><div class="class-report-a4-landscape">'+buildClassScoreTable(res)+'</div>';
+  const header = (res.header || []).map(h => `<th>${legacyEscape(h)}</th>`).join('');
+  const rows = (res.rows || []).map(row => `<tr>${row.map(c => `<td>${legacyEscape(c)}</td>`).join('')}</tr>`).join('');
+  
+  host.innerHTML = `
+    <div style="margin-bottom:10px; font-weight:800; color:var(--navy-950);">📅 ເດືອນ ${legacyEscape(month)}</div>
+    <div class="class-report-a4-landscape">
+      <table class="report-table class-scores-table">
+        <thead><tr>${header}</tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+  `;
 }
 </script>
 
@@ -2279,14 +2288,6 @@ legacyRenderReport = function(report, host) {
   card.appendChild(footer);
 };
 downloadPDF = function(filename){ const element=document.getElementById('reportCardContent'); if(!element||!window.html2pdf)return; html2pdf().set({margin:0.27, filename:(filename||'ປຶ້ມຕິດຕາມ')+'.pdf', image:{type:'jpeg',quality:0.98}, html2canvas:{scale:2,letterRendering:true}, pagebreak:{mode:['avoid-all','css','legacy'],avoid:['tr']}, jsPDF:{unit:'in',format:'a4',orientation:'landscape'}}).from(element).save(); };
-</script>
-<script id="fixed-report-renderer">
-// ใช้ Template เดียวกันสำหรับผู้ดูแล/ครู และไม่เปลี่ยนโครงสร้างตามข้อมูลที่ได้รับ
-legacyRenderReport = function(report, host){
-  const student=report.student||{}, editable=!!report.editable;
-  const info='<div class="report-info"><div><b>ຊື່–ນາມສະກຸນ:</b> '+legacyEscape(student.name||'')+'</div><div><b>ຫ້ອງ:</b> '+legacyEscape(student.room||'')+'</div><div><b>ປີການສຶກສາ:</b> 2025-2026</div><div><b>ສະຖານະ:</b> ປຶ້ມຕິດຕາມ</div></div>';
-  host.innerHTML='<div class="detail-overlay" onclick="if(event.target===this)closeDetail()"><div class="detail-card report-template" id="reportCardContent"><div class="detail-header"><div class="detail-name">📊 ປຶ້ມຕິດຕາມນັກຮຽນ</div><button class="close-btn" onclick="closeDetail()">✕</button></div><div class="btn-group" style="margin-bottom:15px;display:flex;gap:10px;"><button class="dl-btn" onclick="downloadExcel()">⬇ Excel</button><button class="dl-btn" onclick="downloadPDF(\''+legacyEscape(student.name||'ປຶ້ມຕິດຕາມ')+'\')">⬇ PDF</button>'+(editable?'<button class="dl-btn" style="background:#167c45;color:#fff;" onclick="saveLegacyReportEdits()">💾 ບັນທຶກຄະແນນ</button>':'')+'</div>'+info+'<div class="report-table-wrap">'+buildTrackingTable(report,editable)+'</div><div class="report-footer"><span>ລາຍເຊັນຄູປະຈຳຫ້ອງ: ____________________</span><span>ວັນທີ: ____________________</span><span>ຜູ້ປົກຄອງ: ____________________</span></div></div></div>';
-};
 </script>
 </body>
 </html>
