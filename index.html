@@ -2274,7 +2274,7 @@ async function loadClassMonthScores(room, month) {
 function downloadClassPDF(room, month) {
   const element = document.querySelector('#classMonthTableHost .class-report-a4-landscape');
   if (!element || !window.html2pdf) return;
-  html2pdf().set({margin:0.2, filename:'ຄະແນນຫ້ອງ_'+room+'_'+month+'.pdf', image:{type:'jpeg',quality:0.98}, html2canvas:{scale:2, useCORS:true}, pagebreak:{mode:['css','legacy'],avoid:['tr']}, jsPDF:{unit:'in',format:'a4',orientation:'landscape'}}).from(element).save();
+  html2pdf().set({margin:0.79, filename:'ຄະແນນຫ້ອງ_'+room+'_'+month+'.pdf', image:{type:'jpeg',quality:0.98}, html2canvas:{scale:2, useCORS:true}, pagebreak:{mode:['css','legacy'],avoid:['tr']}, jsPDF:{unit:'in',format:'a4',orientation:'landscape'}}).from(element).save();
 }
 </script>
 
@@ -2299,13 +2299,12 @@ function downloadClassPDF(room, month) {
   .class-scores-table { width:100%; border-collapse:collapse; font-size:8px; table-layout:fixed; }
   .class-scores-table th, .class-scores-table td { border:1px solid #333; padding:2px 1px; text-align:center; overflow:hidden; line-height:1.05; }
   .class-scores-table thead th { height:88px; vertical-align:bottom; padding-bottom:5px; background:#f0f4f7; }
-  /* ລາຍຊື່/ເພດ/ຫ້ອງໃຫ້ລອຍຄົງທີ່ ເວລາເລື່ອນຄະແນນ */
-  .class-scores-table th:nth-child(-n+4), .class-scores-table td:nth-child(-n+4) { position:sticky; z-index:2; background:#fff; }
-  .class-scores-table thead th:nth-child(-n+4) { z-index:4; background:#f0f4f7; }
-  .class-scores-table th:nth-child(1), .class-scores-table td:nth-child(1) { left:0; width:145px; min-width:145px; text-align:left; white-space:nowrap; }
-  .class-scores-table th:nth-child(2), .class-scores-table td:nth-child(2) { left:145px; width:36px; min-width:36px; }
-  .class-scores-table th:nth-child(3), .class-scores-table td:nth-child(3) { left:181px; width:45px; min-width:45px; }
-  .class-scores-table th:nth-child(4), .class-scores-table td:nth-child(4) { left:226px; width:58px; min-width:58px; }
+  /* ລອຍສະເພາະຄໍລຳລາຍຊື່ເທົ່ານັ້ນ; ເພດ/ຫ້ອງ/ຄະແນນໃຫ້ເລື່ອນໄປນຳກັນ */
+  .class-scores-table th:nth-child(1), .class-scores-table td:nth-child(1) { position:sticky; left:0; z-index:2; background:#fff; width:145px; min-width:145px; text-align:left; white-space:nowrap; }
+  .class-scores-table thead th:nth-child(1) { z-index:4; background:#f0f4f7; }
+  .class-scores-table th:nth-child(2), .class-scores-table td:nth-child(2) { width:36px; min-width:36px; }
+  .class-scores-table th:nth-child(3), .class-scores-table td:nth-child(3) { width:45px; min-width:45px; }
+  .class-scores-table th:nth-child(4), .class-scores-table td:nth-child(4) { width:58px; min-width:58px; }
   /* ຫົວຂໍ້ວິຊາແນວຕັ້ງ: ເລີ່ມຈາກຖັນທີ 5 ຫຼັງຈາກຂໍ້ມູນນັກຮຽນ */
   .class-scores-table thead th:nth-child(n+5) { writing-mode:vertical-rl; transform:rotate(180deg); white-space:nowrap; text-align:left; width:25px; min-width:25px; font-size:7px; }
   .class-scores-table tr:nth-child(even) { background:#f9f9f9; }
@@ -2314,7 +2313,7 @@ function downloadClassPDF(room, month) {
   #reportCardContent.report-template .legacy-score-edit[readonly] { background:#fff; color:#111; cursor:default; }
   #reportCardContent.report-template .report-footer { margin-top:8px; padding-top:4px; border-top:1px solid #111; display:flex; justify-content:space-between; font-size:10px; }
   @media(max-width:800px){ #reportCardContent.report-template{width:1120px;transform-origin:top left;} .detail-card:has(#reportCardContent.report-template){overflow:auto;max-width:96vw;} }
-  @media print { @page { size:A4 landscape; margin:7mm; } body{background:#fff!important;} #reportCardContent.report-template{width:100%;padding:0;box-shadow:none;} #reportCardContent.report-template .btn-group,#reportCardContent.report-template .close-btn{display:none!important;} #reportCardContent.report-template .report-table{font-size:7.1px;} #reportCardContent.report-template .report-table th,#reportCardContent.report-template .report-table td{padding:1px;} }
+  @media print { @page { size:A4 landscape; margin:2cm; } body{background:#fff!important;} .class-report-a4-landscape{width:100%;max-width:none;padding:0;margin:0;} .class-scores-table{font-size:8px;} .class-scores-table thead th{height:88px;} #reportCardContent.report-template{width:100%;padding:0;box-shadow:none;} #reportCardContent.report-template .btn-group,#reportCardContent.report-template .close-btn{display:none!important;} #reportCardContent.report-template .report-table{font-size:7.1px;} #reportCardContent.report-template .report-table th,#reportCardContent.report-template .report-table td{padding:1px;} }
 </style>
 <script id="report-template-module">
 const legacyRenderReportTemplateBase = legacyRenderReport;
