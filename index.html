@@ -2057,7 +2057,7 @@ async function renderSearch(force) {
 
   list.innerHTML = filtered.map(function(student) {
     const male = String(student.gender || '').toLowerCase().includes('ຊາຍ') || String(student.gender || '').toLowerCase() === 'male';
-    return '<div class="card" onclick="showDetail(\'' + legacyEscape(student.ref) + '\')"><div class="gender-badge ' + (male ? 'boy' : 'girl') + '">' + (male ? '♂' : '♀') + '</div><div><div class="card-name">' + legacyEscape(legacyDisplayName(student)) + '</div><div class="card-meta">' + legacyEscape(student.room) + ' · ' + legacyEscape(student.studentId || '-') + '</div></div></div>';
+    return '<div class="card" onclick="showDetail(\'' + legacyEscape(student.ref) + '\')"><div class="gender-badge ' + (male ? 'boy' : 'girl') + '">' + (male ? '♂' : '♀') + '</div><div style="flex:1;"><div class="card-name">' + legacyEscape(legacyDisplayName(student)) + '</div><div class="card-meta">' + legacyEscape(student.room) + ' · ' + legacyEscape(student.studentId || '-') + '</div></div><button class="dl-btn small" onclick="event.stopPropagation();showDetail(\'' + legacyEscape(student.ref) + '\')">📘</button></div>';
   }).join('');
 }
 
@@ -2299,11 +2299,15 @@ function downloadClassPDF(room, month) {
   .class-scores-table { width:100%; border-collapse:collapse; font-size:8px; table-layout:fixed; }
   .class-scores-table th, .class-scores-table td { border:1px solid #333; padding:2px 1px; text-align:center; overflow:hidden; line-height:1.05; }
   .class-scores-table thead th { height:88px; vertical-align:bottom; padding-bottom:5px; background:#f0f4f7; }
-  /* ຫົວຂໍ້ວິຊາແນວຕັ້ງ */
-  .class-scores-table thead th:nth-child(n+3) { writing-mode:vertical-rl; transform:rotate(180deg); white-space:nowrap; text-align:left; width:24px; min-width:24px; font-size:7px; }
-  .class-scores-table td:nth-child(1) { width:30px; } /* ລ/ດ */
-  .class-scores-table td:nth-child(2) { width:110px; text-align:left; padding-left:3px; font-weight:bold; white-space:nowrap; } /* ລາຍຊື່ */
-  .class-scores-table td:nth-child(3) { width:25px; font-size:8.5px; } /* ເພດ ຫຍໍ້ໃຫ້ແຄບລົງຕື່ມ */
+  /* ລາຍຊື່/ເພດ/ຫ້ອງໃຫ້ລອຍຄົງທີ່ ເວລາເລື່ອນຄະແນນ */
+  .class-scores-table th:nth-child(-n+4), .class-scores-table td:nth-child(-n+4) { position:sticky; z-index:2; background:#fff; }
+  .class-scores-table thead th:nth-child(-n+4) { z-index:4; background:#f0f4f7; }
+  .class-scores-table th:nth-child(1), .class-scores-table td:nth-child(1) { left:0; width:145px; min-width:145px; text-align:left; white-space:nowrap; }
+  .class-scores-table th:nth-child(2), .class-scores-table td:nth-child(2) { left:145px; width:36px; min-width:36px; }
+  .class-scores-table th:nth-child(3), .class-scores-table td:nth-child(3) { left:181px; width:45px; min-width:45px; }
+  .class-scores-table th:nth-child(4), .class-scores-table td:nth-child(4) { left:226px; width:58px; min-width:58px; }
+  /* ຫົວຂໍ້ວິຊາແນວຕັ້ງ: ເລີ່ມຈາກຖັນທີ 5 ຫຼັງຈາກຂໍ້ມູນນັກຮຽນ */
+  .class-scores-table thead th:nth-child(n+5) { writing-mode:vertical-rl; transform:rotate(180deg); white-space:nowrap; text-align:left; width:25px; min-width:25px; font-size:7px; }
   .class-scores-table tr:nth-child(even) { background:#f9f9f9; }
 
   #reportCardContent.report-template .legacy-score-edit { width:100%; box-sizing:border-box; border:0; background:#fffbe8; text-align:center; font-size:8px; padding:0; min-width:0; }
