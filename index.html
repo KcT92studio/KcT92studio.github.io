@@ -1944,6 +1944,35 @@ let legacyStudents = [];
 let legacySelectedReport = null;
 let legacySearchSequence = 0;
 
+const REPORT_COLUMNS = ['09', '10', '11', '12', 'Avg I', 'Exam I', 'Tot I', '02', '03', '04', '05', 'Avg II', 'Exam II', 'Tot II', 'Year', 'Fix', 'Note'];
+const REPORT_SUBJECTS = [
+  { group: 'ກຸ່ມພາສາ', subject: 'ພາສາລາວ-ວັນນະຄະດີ' },
+  { group: 'ກຸ່ມພາສາ', subject: 'ຄະນິດສາດ' },
+  { group: 'ກຸ່ມພາສາ', subject: 'ສຶກສາພົນລະເມືອງ' },
+  { group: 'ວິທະຍາສາດທຳມະຊາດ', subject: 'ຟີຊິກສາດ' },
+  { group: 'ວິທະຍາສາດທຳມະຊາດ', subject: 'ເຄມີສາດ' },
+  { group: 'ວິທະຍາສາດທຳມະຊາດ', subject: 'ຊີວະສາດ' },
+  { group: 'ວິທະຍາສາດສັງຄົມ', subject: 'ພູມສາດ' },
+  { group: 'ວິທະຍາສາດສັງຄົມ', subject: 'ປະຫວັດສາດ' },
+  { group: 'ວິທະຍາສາດສັງຄົມ', subject: 'ເຕັກໂນໂລຊີ (ICT)' },
+  { group: 'ວິທະຍາສາດສັງຄົມ', subject: 'ພື້ນຖານວິຊາຊີບ' },
+  { group: 'ສິລະປະສຶກສາ', subject: 'ສິລະປະດົນຕີ' },
+  { group: 'ສິລະປະສຶກສາ', subject: 'ສິລະປະກຳ' },
+  { group: 'ພາສາຕ່າງປະເທດ', subject: 'ພາສາອັງກິດ' },
+  { group: 'ພາສາຕ່າງປະເທດ', subject: 'ພາສາຝຣັ່ງ' },
+  { group: 'ພາສາຕ່າງປະເທດ', subject: 'ພາສາ.........' },
+  { group: 'ພລະ-ປ້ອງກັນຊາດ', subject: 'ພລະສຶກສາ' },
+  { group: 'ພລະ-ປ້ອງກັນຊາດ', subject: 'ປ້ອງກັນຊາດ' },
+  { group: 'ກຸ່ມພາສາບາລີ', subject: 'ທັມມະ' },
+  { group: 'ກຸ່ມພາສາບາລີ', subject: 'ວິນັຍ' },
+  { group: 'ກຸ່ມພາສາບາລີ', subject: 'ແຕ່ງ, ແປບາລີ' },
+  { group: 'ກຸ່ມພາສາບາລີ', subject: 'ແປພຸດທະປະຫວັດ' },
+  { group: 'ກິດຈະກຳ', subject: 'ຄະແນນອອກແຮງງານ' },
+  { group: 'ກິດຈະກຳ', subject: 'ຄະແນນຄຸນສົມບັດ' },
+  { group: 'ສະຖິຕິ', subject: 'ຈຳນວນວັນຂາດຮຽນ' },
+  { group: 'ສະຖິຕິ', subject: 'ຈັດທີ' }
+];
+
 function legacyEscape(value) { const node = document.createElement('div'); node.textContent = value == null ? '' : String(value); return node.innerHTML; }
 function legacyText(value) { return value == null || value === '' ? '-' : String(value); }
 function legacyRole() { return String((currentAccess && currentAccess.role) || '').toLowerCase(); }
@@ -2065,8 +2094,18 @@ async function legacyShowMyReport() {
 function legacyRenderReport(report, host) {
   const student = report.student || {}, editable = !!report.editable;
   const info = '<div class="report-info"><div><b>ຊື່ ແລະ ນາມສະກຸນ:</b> ' + legacyEscape(student.name || legacyDisplayName(student)) + '</div><div><b>ຫ້ອງ:</b> ' + legacyEscape(student.room) + '</div><div><b>ພໍ່:</b> ' + legacyEscape(student.father || '-') + '</div><div><b>ແມ່:</b> ' + legacyEscape(student.mother || '-') + '</div></div>';
-  const headers = (report.columns || []).map(function(column) { return '<th>' + legacyEscape(column) + '</th>'; }).join('');
-  const rows = (report.subjects || []).map(function(item, subjectIndex) { const scores = (item.scores || []).map(function(value, columnIndex) { return '<td>' + (editable ? '<input class="legacy-score-edit" data-subject="' + subjectIndex + '" data-column="' + columnIndex + '" data-original="' + legacyEscape(value) + '" value="' + legacyEscape(value) + '">' : legacyEscape(value)) + '</td>'; }).join(''); return '<tr><td style="text-align:left;font-size:10px;color:#666;">' + legacyEscape(item.group) + '</td><td style="text-align:left;font-weight:600;">' + legacyEscape(item.subject) + '</td>' + scores + '</tr>'; }).join('');
+  const headers = REPORT_COLUMNS.map(function(column) { return '<th>' + legacyEscape(column) + '</th>'; }).join('');
+  
+  // ສ້າງຕາຕະລາງລໍຖ້າ (Static Template) ທີ່ມີທຸກວິຊາຄົບຖ້ວນ
+  const rows = REPORT_SUBJECTS.map(function(item, subjectIndex) {
+    let matchedSubject = (report.subjects || []).find(s => s.subject === item.subject);
+    const scores = REPORT_COLUMNS.map(function(col, columnIndex) {
+      let value = (matchedSubject && matchedSubject.scores && matchedSubject.scores[columnIndex]) ? matchedSubject.scores[columnIndex] : '';
+      return '<td>' + (editable ? '<input class="legacy-score-edit" data-subject="' + subjectIndex + '" data-column="' + columnIndex + '" data-original="' + legacyEscape(value) + '" value="' + legacyEscape(value) + '">' : legacyEscape(value)) + '</td>';
+    }).join('');
+    return '<tr><td style="text-align:left;font-size:10px;color:#666;">' + legacyEscape(item.group) + '</td><td style="text-align:left;font-weight:600;">' + legacyEscape(item.subject) + '</td>' + scores + '</tr>';
+  }).join('');
+  
   host.innerHTML = '<div class="detail-overlay" onclick="if(event.target===this)closeDetail()"><div class="detail-card" id="reportCardContent"><div class="detail-header"><div class="detail-name">📊 ປຶ້ມຕິດຕາມນັກຮຽນ</div><button class="close-btn" onclick="closeDetail()">✕</button></div><div class="btn-group" style="margin-bottom:15px; display:flex; gap:10px;"><button class="dl-btn" onclick="downloadExcel()">⬇ Excel</button><button class="dl-btn" onclick="downloadPDF(\'' + legacyEscape(student.name || 'report') + '\')">⬇ PDF</button>' + (editable ? '<button class="dl-btn" style="background:#167c45;color:#fff;" onclick="saveLegacyReportEdits()">💾 ບັນທຶກຄະແນນ</button>' : '') + '</div>' + info + '<div class="report-table-wrap" style="overflow:auto;"><table class="report-table" id="scoreTable"><thead><tr><th>ກຸ່ມວິຊາ</th><th>ວິຊາຮຽນ</th>' + headers + '</tr></thead><tbody>' + rows + '</tbody></table></div></div></div>';
 }
 
@@ -2232,1035 +2271,62 @@ async function loadClassMonthScores(room, month) {
   `;
 }
 </script>
-    
+
 <style id="report-template-style">
+  #reportCardContent.report-template { width: 1120px; max-width:none; padding:14px 16px; color:#111; background:#fff; font-family:"Noto Sans Lao","Phetsarath OT",Arial,sans-serif; }
+  #reportCardContent.report-template .detail-header { margin-bottom:6px; border-bottom:1px solid #111; padding-bottom:4px; }
+  #reportCardContent.report-template .detail-name { font-size:16px; font-weight:800; }
+  #reportCardContent.report-template .report-info { display:grid; grid-template-columns:1fr 1fr; gap:3px 18px; font-size:11px; margin:6px 0; padding:6px 8px; border:1px solid #222; }
+  #reportCardContent.report-template .report-table-wrap { overflow:visible; }
+  #reportCardContent.report-template .report-table { width:100%; table-layout:fixed; border-collapse:collapse; font-size:8px; }
+  #reportCardContent.report-template .report-table th, #reportCardContent.report-template .report-table td { border:1px solid #222; padding:2px 1px; line-height:1.15; text-align:center; vertical-align:middle; overflow:hidden; }
+  #reportCardContent.report-template .report-table th:nth-child(1), #reportCardContent.report-template .report-table td:nth-child(1) { width:100px; text-align:left; }
+  #reportCardContent.report-template .report-table th:nth-child(2), #reportCardContent.report-template .report-table td:nth-child(2) { width:145px; text-align:left; }
+  #reportCardContent.report-template .report-table th:nth-child(n+3), #reportCardContent.report-template .report-table td:nth-child(n+3) { width:33px; }
+  #reportCardContent.report-template .report-table th { background:#fff; font-size:8px; font-weight:800; white-space:normal; }
+  #reportCardContent.report-template .report-table tr { break-inside:avoid; page-break-inside:avoid; }
+  
+  /* ຕາຕະລາງຄະແນນລວມຫ້ອງແບບ Excel A4 ແນວນອນ */
+  .class-report-a4-landscape { width:1120px; background:#fff; padding:10px; margin:0 auto; }
+  .class-scores-table { width:100%; border-collapse:collapse; font-size:10px; table-layout:fixed; }
+  .class-scores-table th, .class-scores-table td { border:1px solid #333; padding:4px 2px; text-align:center; overflow:hidden; }
+  .class-scores-table thead th { height:120px; vertical-align:bottom; padding-bottom:10px; background:#f0f4f7; }
+  /* ຫົວຂໍ້ວິຊາແນວຕັ້ງ */
+  .class-scores-table thead th:nth-child(n+3) { writing-mode:vertical-rl; transform:rotate(180deg); white-space:nowrap; text-align:left; width:30px; min-width:30px; font-size:9px; }
+  .class-scores-table td:nth-child(1) { width:30px; } /* ລ/ດ */
+  .class-scores-table td:nth-child(2) { width:140px; text-align:left; padding-left:5px; font-weight:bold; white-space:nowrap; } /* ລາຍຊື່ */
+  .class-scores-table td:nth-child(3) { width:25px; font-size:8.5px; } /* ເພດ ຫຍໍ້ໃຫ້ແຄບລົງຕື່ມ */
+  .class-scores-table tr:nth-child(even) { background:#f9f9f9; }
 
-  /* =========================================================
-     ຮູບແບບໃບຕິດຕາມຜົນການຮຽນ
-     ========================================================= */
-
-  #reportCardContent.report-template {
-    width: 1120px;
-    max-width: none;
-    padding: 14px 16px;
-    color: #111;
-    background: #fff;
-    font-family: "Noto Sans Lao", "Phetsarath OT", Arial, sans-serif;
-    box-sizing: border-box;
-  }
-
-  #reportCardContent.report-template .detail-header {
-    margin-bottom: 6px;
-    border-bottom: 1px solid #111;
-    padding-bottom: 4px;
-  }
-
-  #reportCardContent.report-template .detail-name {
-    font-size: 16px;
-    font-weight: 800;
-  }
-
-  #reportCardContent.report-template .report-info {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 3px 18px;
-    font-size: 11px;
-    margin: 6px 0;
-    padding: 6px 8px;
-    border: 1px solid #222;
-  }
-
-  #reportCardContent.report-template .report-table-wrap {
-    overflow: visible;
-  }
-
-  #reportCardContent.report-template .report-table {
-    width: 100%;
-    table-layout: fixed;
-    border-collapse: collapse;
-    font-size: 8px;
-  }
-
-  #reportCardContent.report-template .report-table th,
-  #reportCardContent.report-template .report-table td {
-    border: 1px solid #222;
-    padding: 2px 1px;
-    line-height: 1.15;
-    text-align: center;
-    vertical-align: middle;
-    overflow: hidden;
-    box-sizing: border-box;
-  }
-
-  #reportCardContent.report-template .report-table th:nth-child(1),
-  #reportCardContent.report-template .report-table td:nth-child(1) {
-    width: 100px;
-    text-align: left;
-  }
-
-  #reportCardContent.report-template .report-table th:nth-child(2),
-  #reportCardContent.report-template .report-table td:nth-child(2) {
-    width: 145px;
-    text-align: left;
-  }
-
-  #reportCardContent.report-template .report-table th:nth-child(n+3),
-  #reportCardContent.report-template .report-table td:nth-child(n+3) {
-    width: 33px;
-  }
-
-  #reportCardContent.report-template .report-table th {
-    background: #fff;
-    font-size: 8px;
-    font-weight: 800;
-    white-space: normal;
-  }
-
-  #reportCardContent.report-template .report-table tr {
-    break-inside: avoid;
-    page-break-inside: avoid;
-  }
-
-
-  /* =========================================================
-     ຕາຕະລາງຄະແນນລວມຫ້ອງ
-     ລຳດັບ → ຊື່ → ເພດ → ວິຊາ
-     ========================================================= */
-
-  .class-report-a4-landscape {
-    width: 1120px;
-    max-width: none;
-    background: #fff;
-    padding: 10px;
-    margin: 0 auto;
-    box-sizing: border-box;
-  }
-
-
-  /* ຕາຕະລາງຫຼັກ */
-
-  .class-scores-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 10px;
-    table-layout: fixed;
-  }
-
-  .class-scores-table th,
-  .class-scores-table td {
-    border: 1px solid #333;
-    padding: 4px 2px;
-    text-align: center;
-    vertical-align: middle;
-    overflow: hidden;
-    box-sizing: border-box;
-  }
-
-
-  /* ຫົວຕາຕະລາງ */
-
-  .class-scores-table thead th {
-    height: 120px;
-    vertical-align: bottom;
-    padding-bottom: 10px;
-    background: #f0f4f7;
-  }
-
-
-  /* =========================================================
-     ຄໍລຳ 1 = ລ/ດ
-     ========================================================= */
-
-  .class-scores-table th:nth-child(1),
-  .class-scores-table td:nth-child(1) {
-    width: 30px;
-    min-width: 30px;
-    max-width: 30px;
-    text-align: center;
-    white-space: nowrap;
-  }
-
-
-  /* =========================================================
-     ຄໍລຳ 2 = ຊື່
-     ========================================================= */
-
-  .class-scores-table th:nth-child(2),
-  .class-scores-table td:nth-child(2) {
-    width: 140px;
-    min-width: 140px;
-    max-width: 140px;
-    text-align: left;
-    padding-left: 5px;
-    font-weight: bold;
-    white-space: nowrap;
-  }
-
-
-  /* =========================================================
-     ຄໍລຳ 3 = ເພດ
-     ========================================================= */
-
-  .class-scores-table th:nth-child(3),
-  .class-scores-table td:nth-child(3) {
-    width: 25px;
-    min-width: 25px;
-    max-width: 25px;
-    text-align: center;
-    font-size: 8.5px;
-    white-space: nowrap;
-  }
-
-
-  /* =========================================================
-     ຄໍລຳ 4 ຂຶ້ນໄປ = ວິຊາ
-     ========================================================= */
-
-  .class-scores-table thead th:nth-child(n+4) {
-    width: 30px;
-    min-width: 30px;
-    max-width: 30px;
-
-    writing-mode: vertical-rl;
-    transform: rotate(180deg);
-
-    white-space: nowrap;
-    text-align: left;
-    font-size: 9px;
-  }
-
-  .class-scores-table tbody td:nth-child(n+4) {
-    width: 30px;
-    min-width: 30px;
-    max-width: 30px;
-  }
-
-
-  /* ສະຫຼັບສີແຖວ */
-
-  .class-scores-table tr:nth-child(even) {
-    background: #f9f9f9;
-  }
-
-
-  /* =========================================================
-     ຊ່ອງແກ້ຄະແນນ
-     ========================================================= */
-
-  #reportCardContent.report-template .legacy-score-edit {
-    width: 100%;
-    box-sizing: border-box;
-    border: 0;
-    background: #fffbe8;
-    text-align: center;
-    font-size: 8px;
-    padding: 0;
-    min-width: 0;
-  }
-
-  #reportCardContent.report-template .legacy-score-edit[readonly] {
-    background: #fff;
-    color: #111;
-    cursor: default;
-  }
-
-
-  /* =========================================================
-     ສ່ວນທ້າຍ
-     ========================================================= */
-
-  #reportCardContent.report-template .report-footer {
-    margin-top: 8px;
-    padding-top: 4px;
-    border-top: 1px solid #111;
-    display: flex;
-    justify-content: space-between;
-    font-size: 10px;
-  }
-
-
-  /* =========================================================
-     ໂທລະສັບ
-     ========================================================= */
-
-  @media (max-width: 800px) {
-
-    #reportCardContent.report-template {
-      width: 1120px;
-      transform-origin: top left;
-    }
-
-    .detail-card:has(#reportCardContent.report-template) {
-      overflow: auto;
-      max-width: 96vw;
-    }
-  }
-
-
-  /* =========================================================
-     ພິມ A4 ແນວນອນ
-     ========================================================= */
-
-  @media print {
-
-    @page {
-      size: A4 landscape;
-      margin: 7mm;
-    }
-
-    body {
-      background: #fff !important;
-    }
-
-    #reportCardContent.report-template {
-      width: 100%;
-      padding: 0;
-      box-shadow: none;
-    }
-
-    #reportCardContent.report-template .btn-group,
-    #reportCardContent.report-template .close-btn {
-      display: none !important;
-    }
-
-    #reportCardContent.report-template .report-table {
-      font-size: 7.1px;
-    }
-
-    #reportCardContent.report-template .report-table th,
-    #reportCardContent.report-template .report-table td {
-      padding: 1px;
-    }
-  }
-
+  #reportCardContent.report-template .legacy-score-edit { width:100%; box-sizing:border-box; border:0; background:#fffbe8; text-align:center; font-size:8px; padding:0; min-width:0; }
+  #reportCardContent.report-template .legacy-score-edit[readonly] { background:#fff; color:#111; cursor:default; }
+  #reportCardContent.report-template .report-footer { margin-top:8px; padding-top:4px; border-top:1px solid #111; display:flex; justify-content:space-between; font-size:10px; }
+  @media(max-width:800px){ #reportCardContent.report-template{width:1120px;transform-origin:top left;} .detail-card:has(#reportCardContent.report-template){overflow:auto;max-width:96vw;} }
+  @media print { @page { size:A4 landscape; margin:7mm; } body{background:#fff!important;} #reportCardContent.report-template{width:100%;padding:0;box-shadow:none;} #reportCardContent.report-template .btn-group,#reportCardContent.report-template .close-btn{display:none!important;} #reportCardContent.report-template .report-table{font-size:7.1px;} #reportCardContent.report-template .report-table th,#reportCardContent.report-template .report-table td{padding:1px;} }
 </style>
-
-
 <script id="report-template-module">
-
-/* =========================================================
-   ຮັກສາຟັງຊັນເດີມ
-   ========================================================= */
-
 const legacyRenderReportTemplateBase = legacyRenderReport;
-
-
-/* =========================================================
-   ສ້າງ Report
-   ========================================================= */
-
 legacyRenderReport = function(report, host) {
-
   legacyRenderReportTemplateBase(report, host);
-
   const card = host.querySelector('#reportCardContent');
-
   if (!card) return;
-
   card.classList.add('report-template');
-
   const student = report.student || {};
-
-
-  /* =======================================================
-     ຫົວຂໍ້
-     ======================================================= */
-
   const header = card.querySelector('.detail-header');
-
   if (header) {
-
     const heading = document.createElement('div');
-
-    heading.style.cssText =
-      'text-align:center;font-size:13px;font-weight:800;margin:0 0 4px;';
-
-    heading.textContent =
-      'ໃບຕິດຕາມຜົນການຮຽນ ປີການສຶກສາ';
-
+    heading.style.cssText='text-align:center;font-size:13px;font-weight:800;margin:0 0 4px;';
+    heading.textContent='ໃບຕິດຕາມຜົນການຮຽນ ປີການສຶກສາ';
     header.prepend(heading);
   }
-
-
-  /* =======================================================
-     ຂໍ້ມູນນັກຮຽນ
-     ======================================================= */
-
   const info = card.querySelector('.report-info');
-
   if (info) {
-
-    info.innerHTML =
-      '<div><b>ຊື່–ນາມສະກຸນ:</b> ' +
-      legacyEscape(student.name || '') +
-      '</div>' +
-
-      '<div><b>ຫ້ອງ:</b> ' +
-      legacyEscape(student.room || '') +
-      '</div>' +
-
-      '<div><b>ປີການສຶກສາ:</b> 2025-2026</div>' +
-
-      '<div><b>ສະຖານະ:</b> ປຶ້ມຕິດຕາມ</div>';
+    info.innerHTML='<div><b>ຊື່–ນາມສະກຸນ:</b> '+legacyEscape(student.name || '')+'</div><div><b>ຫ້ອງ:</b> '+legacyEscape(student.room || '')+'</div><div><b>ປີການສຶກສາ:</b> 2025-2026</div><div><b>ສະຖານະ:</b> ປຶ້ມຕິດຕາມ</div>';
   }
-
-
-  /* =======================================================
-     ຕາຕະລາງຄະແນນລວມຫ້ອງ
-
-     ໂຄງສ້າງທີ່ຕ້ອງການ:
-
-     ລ/ດ | ຊື່ | ເພດ | ວິຊາ | ວິຊາ | ວິຊາ...
-     ======================================================= */
-
-  const classTables =
-    document.querySelectorAll('.class-scores-table');
-
-  classTables.forEach(function(table) {
-
-    const headRow =
-      table.querySelector('thead tr');
-
-    const body =
-      table.querySelector('tbody');
-
-    if (!headRow || !body) return;
-
-
-    /* -------------------------------------------------------
-       ກວດວ່າມີຄໍລຳ ລ/ດ ແລ້ວບໍ່
-       ------------------------------------------------------- */
-
-    const headers =
-      Array.from(headRow.children);
-
-    const firstHeader =
-      headers[0];
-
-
-    /*
-      ຖ້າຄໍລຳທຳອິດບໍ່ແມ່ນ ລ/ດ
-      ໃຫ້ເພີ່ມຄໍລຳ ລ/ດ ເຂົ້າໄປ
-    */
-
-    if (
-      firstHeader &&
-      !/ລ\/ດ|ລຳດັບ|ລາດັບ|ລำดับ/i.test(
-        firstHeader.textContent.trim()
-      )
-    ) {
-
-      const rankHeader =
-        document.createElement('th');
-
-      rankHeader.textContent = 'ລ/ດ';
-
-      headRow.insertBefore(
-        rankHeader,
-        firstHeader
-      );
-    }
-
-
-    /* -------------------------------------------------------
-       ເຕີມເລກລຳດັບ 1, 2, 3...
-       ------------------------------------------------------- */
-
-    const rows =
-      Array.from(body.querySelectorAll('tr'));
-
-    rows.forEach(function(row, index) {
-
-      const cells =
-        Array.from(row.children);
-
-      if (!cells.length) return;
-
-
-      /*
-        ກວດວ່າມີຄໍລຳລຳດັບແລ້ວບໍ່
-      */
-
-      const firstCell =
-        cells[0];
-
-      const firstValue =
-        firstCell.textContent.trim();
-
-
-      /*
-        ຖ້າຊ່ອງທຳອິດເປັນຊື່
-        ໃຫ້ເພີ່ມລຳດັບກ່ອນຊື່
-      */
-
-      if (
-<style id="report-template-style">
-
-  /* =========================================================
-     ຮູບແບບໃບຕິດຕາມຜົນການຮຽນ
-     ========================================================= */
-
-  #reportCardContent.report-template {
-    width: 1120px;
-    max-width: none;
-    padding: 14px 16px;
-    color: #111;
-    background: #fff;
-    font-family: "Noto Sans Lao", "Phetsarath OT", Arial, sans-serif;
-    box-sizing: border-box;
-  }
-
-  #reportCardContent.report-template .detail-header {
-    margin-bottom: 6px;
-    border-bottom: 1px solid #111;
-    padding-bottom: 4px;
-  }
-
-  #reportCardContent.report-template .detail-name {
-    font-size: 16px;
-    font-weight: 800;
-  }
-
-  #reportCardContent.report-template .report-info {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 3px 18px;
-    font-size: 11px;
-    margin: 6px 0;
-    padding: 6px 8px;
-    border: 1px solid #222;
-  }
-
-  #reportCardContent.report-template .report-table-wrap {
-    overflow: visible;
-  }
-
-  #reportCardContent.report-template .report-table {
-    width: 100%;
-    table-layout: fixed;
-    border-collapse: collapse;
-    font-size: 8px;
-  }
-
-  #reportCardContent.report-template .report-table th,
-  #reportCardContent.report-template .report-table td {
-    border: 1px solid #222;
-    padding: 2px 1px;
-    line-height: 1.15;
-    text-align: center;
-    vertical-align: middle;
-    overflow: hidden;
-    box-sizing: border-box;
-  }
-
-  #reportCardContent.report-template .report-table th:nth-child(1),
-  #reportCardContent.report-template .report-table td:nth-child(1) {
-    width: 100px;
-    text-align: left;
-  }
-
-  #reportCardContent.report-template .report-table th:nth-child(2),
-  #reportCardContent.report-template .report-table td:nth-child(2) {
-    width: 145px;
-    text-align: left;
-  }
-
-  #reportCardContent.report-template .report-table th:nth-child(n+3),
-  #reportCardContent.report-template .report-table td:nth-child(n+3) {
-    width: 33px;
-  }
-
-  #reportCardContent.report-template .report-table th {
-    background: #fff;
-    font-size: 8px;
-    font-weight: 800;
-    white-space: normal;
-  }
-
-  #reportCardContent.report-template .report-table tr {
-    break-inside: avoid;
-    page-break-inside: avoid;
-  }
-
-
-  /* =========================================================
-     ຕາຕະລາງຄະແນນລວມຫ້ອງ
-     ລຳດັບ → ຊື່ → ເພດ → ວິຊາ
-     ========================================================= */
-
-  .class-report-a4-landscape {
-    width: 1120px;
-    max-width: none;
-    background: #fff;
-    padding: 10px;
-    margin: 0 auto;
-    box-sizing: border-box;
-  }
-
-
-  /* ຕາຕະລາງຫຼັກ */
-
-  .class-scores-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 10px;
-    table-layout: fixed;
-  }
-
-  .class-scores-table th,
-  .class-scores-table td {
-    border: 1px solid #333;
-    padding: 4px 2px;
-    text-align: center;
-    vertical-align: middle;
-    overflow: hidden;
-    box-sizing: border-box;
-  }
-
-
-  /* ຫົວຕາຕະລາງ */
-
-  .class-scores-table thead th {
-    height: 120px;
-    vertical-align: bottom;
-    padding-bottom: 10px;
-    background: #f0f4f7;
-  }
-
-
-  /* =========================================================
-     ຄໍລຳ 1 = ລ/ດ
-     ========================================================= */
-
-  .class-scores-table th:nth-child(1),
-  .class-scores-table td:nth-child(1) {
-    width: 30px;
-    min-width: 30px;
-    max-width: 30px;
-    text-align: center;
-    white-space: nowrap;
-  }
-
-
-  /* =========================================================
-     ຄໍລຳ 2 = ຊື່
-     ========================================================= */
-
-  .class-scores-table th:nth-child(2),
-  .class-scores-table td:nth-child(2) {
-    width: 140px;
-    min-width: 140px;
-    max-width: 140px;
-    text-align: left;
-    padding-left: 5px;
-    font-weight: bold;
-    white-space: nowrap;
-  }
-
-
-  /* =========================================================
-     ຄໍລຳ 3 = ເພດ
-     ========================================================= */
-
-  .class-scores-table th:nth-child(3),
-  .class-scores-table td:nth-child(3) {
-    width: 25px;
-    min-width: 25px;
-    max-width: 25px;
-    text-align: center;
-    font-size: 8.5px;
-    white-space: nowrap;
-  }
-
-
-  /* =========================================================
-     ຄໍລຳ 4 ຂຶ້ນໄປ = ວິຊາ
-     ========================================================= */
-
-  .class-scores-table thead th:nth-child(n+4) {
-    width: 30px;
-    min-width: 30px;
-    max-width: 30px;
-
-    writing-mode: vertical-rl;
-    transform: rotate(180deg);
-
-    white-space: nowrap;
-    text-align: left;
-    font-size: 9px;
-  }
-
-  .class-scores-table tbody td:nth-child(n+4) {
-    width: 30px;
-    min-width: 30px;
-    max-width: 30px;
-  }
-
-
-  /* ສະຫຼັບສີແຖວ */
-
-  .class-scores-table tr:nth-child(even) {
-    background: #f9f9f9;
-  }
-
-
-  /* =========================================================
-     ຊ່ອງແກ້ຄະແນນ
-     ========================================================= */
-
-  #reportCardContent.report-template .legacy-score-edit {
-    width: 100%;
-    box-sizing: border-box;
-    border: 0;
-    background: #fffbe8;
-    text-align: center;
-    font-size: 8px;
-    padding: 0;
-    min-width: 0;
-  }
-
-  #reportCardContent.report-template .legacy-score-edit[readonly] {
-    background: #fff;
-    color: #111;
-    cursor: default;
-  }
-
-
-  /* =========================================================
-     ສ່ວນທ້າຍ
-     ========================================================= */
-
-  #reportCardContent.report-template .report-footer {
-    margin-top: 8px;
-    padding-top: 4px;
-    border-top: 1px solid #111;
-    display: flex;
-    justify-content: space-between;
-    font-size: 10px;
-  }
-
-
-  /* =========================================================
-     ໂທລະສັບ
-     ========================================================= */
-
-  @media (max-width: 800px) {
-
-    #reportCardContent.report-template {
-      width: 1120px;
-      transform-origin: top left;
-    }
-
-    .detail-card:has(#reportCardContent.report-template) {
-      overflow: auto;
-      max-width: 96vw;
-    }
-  }
-
-
-  /* =========================================================
-     ພິມ A4 ແນວນອນ
-     ========================================================= */
-
-  @media print {
-
-    @page {
-      size: A4 landscape;
-      margin: 7mm;
-    }
-
-    body {
-      background: #fff !important;
-    }
-
-    #reportCardContent.report-template {
-      width: 100%;
-      padding: 0;
-      box-shadow: none;
-    }
-
-    #reportCardContent.report-template .btn-group,
-    #reportCardContent.report-template .close-btn {
-      display: none !important;
-    }
-
-    #reportCardContent.report-template .report-table {
-      font-size: 7.1px;
-    }
-
-    #reportCardContent.report-template .report-table th,
-    #reportCardContent.report-template .report-table td {
-      padding: 1px;
-    }
-  }
-
-</style>
-
-
-<script id="report-template-module">
-
-/* =========================================================
-   ຮັກສາຟັງຊັນເດີມ
-   ========================================================= */
-
-const legacyRenderReportTemplateBase = legacyRenderReport;
-
-
-/* =========================================================
-   ສ້າງ Report
-   ========================================================= */
-
-legacyRenderReport = function(report, host) {
-
-  legacyRenderReportTemplateBase(report, host);
-
-  const card = host.querySelector('#reportCardContent');
-
-  if (!card) return;
-
-  card.classList.add('report-template');
-
-  const student = report.student || {};
-
-
-  /* =======================================================
-     ຫົວຂໍ້
-     ======================================================= */
-
-  const header = card.querySelector('.detail-header');
-
-  if (header) {
-
-    const heading = document.createElement('div');
-
-    heading.style.cssText =
-      'text-align:center;font-size:13px;font-weight:800;margin:0 0 4px;';
-
-    heading.textContent =
-      'ໃບຕິດຕາມຜົນການຮຽນ ປີການສຶກສາ';
-
-    header.prepend(heading);
-  }
-
-
-  /* =======================================================
-     ຂໍ້ມູນນັກຮຽນ
-     ======================================================= */
-
-  const info = card.querySelector('.report-info');
-
-  if (info) {
-
-    info.innerHTML =
-      '<div><b>ຊື່–ນາມສະກຸນ:</b> ' +
-      legacyEscape(student.name || '') +
-      '</div>' +
-
-      '<div><b>ຫ້ອງ:</b> ' +
-      legacyEscape(student.room || '') +
-      '</div>' +
-
-      '<div><b>ປີການສຶກສາ:</b> 2025-2026</div>' +
-
-      '<div><b>ສະຖານະ:</b> ປຶ້ມຕິດຕາມ</div>';
-  }
-
-
-  /* =======================================================
-     ຕາຕະລາງຄະແນນລວມຫ້ອງ
-
-     ໂຄງສ້າງທີ່ຕ້ອງການ:
-
-     ລ/ດ | ຊື່ | ເພດ | ວິຊາ | ວິຊາ | ວິຊາ...
-     ======================================================= */
-
-  const classTables =
-    document.querySelectorAll('.class-scores-table');
-
-  classTables.forEach(function(table) {
-
-    const headRow =
-      table.querySelector('thead tr');
-
-    const body =
-      table.querySelector('tbody');
-
-    if (!headRow || !body) return;
-
-
-    /* -------------------------------------------------------
-       ກວດວ່າມີຄໍລຳ ລ/ດ ແລ້ວບໍ່
-       ------------------------------------------------------- */
-
-    const headers =
-      Array.from(headRow.children);
-
-    const firstHeader =
-      headers[0];
-
-
-    /*
-      ຖ້າຄໍລຳທຳອິດບໍ່ແມ່ນ ລ/ດ
-      ໃຫ້ເພີ່ມຄໍລຳ ລ/ດ ເຂົ້າໄປ
-    */
-
-    if (
-      firstHeader &&
-      !/ລ\/ດ|ລຳດັບ|ລາດັບ|ລำดับ/i.test(
-        firstHeader.textContent.trim()
-      )
-    ) {
-
-      const rankHeader =
-        document.createElement('th');
-
-      rankHeader.textContent = 'ລ/ດ';
-
-      headRow.insertBefore(
-        rankHeader,
-        firstHeader
-      );
-    }
-
-
-    /* -------------------------------------------------------
-       ເຕີມເລກລຳດັບ 1, 2, 3...
-       ------------------------------------------------------- */
-
-    const rows =
-      Array.from(body.querySelectorAll('tr'));
-
-    rows.forEach(function(row, index) {
-
-      const cells =
-        Array.from(row.children);
-
-      if (!cells.length) return;
-
-
-      /*
-        ກວດວ່າມີຄໍລຳລຳດັບແລ້ວບໍ່
-      */
-
-      const firstCell =
-        cells[0];
-
-      const firstValue =
-        firstCell.textContent.trim();
-
-
-      /*
-        ຖ້າຊ່ອງທຳອິດເປັນຊື່
-        ໃຫ້ເພີ່ມລຳດັບກ່ອນຊື່
-      */
-
-      if (
-        !/^\d+$/.test(firstValue)
-      ) {
-
-        const rankCell =
-          document.createElement('td');
-
-        rankCell.textContent =
-          String(index + 1);
-
-        row.insertBefore(
-          rankCell,
-          firstCell
-        );
-
-      } else {
-
-        /*
-          ຖ້າມີຊ່ອງລຳດັບຢູ່ແລ້ວ
-          ແຕ່ວ່າງ ໃຫ້ເຕີມເລກໃຫ້
-        */
-
-        if (!firstValue) {
-          firstCell.textContent =
-            String(index + 1);
-        }
-      }
-
-    });
-
-  });
-
-
-  /* =======================================================
-     Footer
-     ======================================================= */
-
-  const footer =
-    document.createElement('div');
-
-  footer.className =
-    'report-footer';
-
-  footer.innerHTML =
-    '<span>ລາຍເຊັນຄູປະຈຳຫ້ອງ: ____________________</span>' +
-    '<span>ວັນທີ: ____________________</span>' +
-    '<span>ຜູ້ປົກຄອງ: ____________________</span>';
-
+  const footer = document.createElement('div'); footer.className='report-footer'; footer.innerHTML='<span>ລາຍເຊັນຄູປະຈຳຫ້ອງ: ____________________</span><span>ວັນທີ: ____________________</span><span>ຜູ້ປົກຄອງ: ____________________</span>';
   card.appendChild(footer);
-
 };
-
-
-/* =========================================================
-   Download PDF
-   ========================================================= */
-
-downloadPDF = function(filename) {
-
-  const element =
-    document.getElementById('reportCardContent');
-
-  if (
-    !element ||
-    !window.html2pdf
-  ) return;
-
-  html2pdf()
-    .set({
-
-      margin: 0.27,
-
-      filename:
-        (filename || 'ປຶ້ມຕິດຕາມ') +
-        '.pdf',
-
-      image: {
-        type: 'jpeg',
-        quality: 0.98
-      },
-
-      html2canvas: {
-        scale: 2,
-        letterRendering: true
-      },
-
-      pagebreak: {
-        mode: [
-          'avoid-all',
-          'css',
-          'legacy'
-        ],
-        avoid: ['tr']
-      },
-
-      jsPDF: {
-        unit: 'in',
-        format: 'a4',
-        orientation: 'landscape'
-      }
-
-    })
-    .from(element)
-    .save();
-
-};
-
+downloadPDF = function(filename){ const element=document.getElementById('reportCardContent'); if(!element||!window.html2pdf)return; html2pdf().set({margin:0.27, filename:(filename||'ປຶ້ມຕິດຕາມ')+'.pdf', image:{type:'jpeg',quality:0.98}, html2canvas:{scale:2,letterRendering:true}, pagebreak:{mode:['avoid-all','css','legacy'],avoid:['tr']}, jsPDF:{unit:'in',format:'a4',orientation:'landscape'}}).from(element).save(); };
 </script>
 </body>
 </html>
