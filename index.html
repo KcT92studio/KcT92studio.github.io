@@ -1597,7 +1597,8 @@ async function loadApps(){
     grid.innerHTML = '<p style="color:var(--muted); grid-column:1/-1;">ຍັງບໍ່ມີແອັບ</p>';
     return;
   }
-  grid.innerHTML = apps.map(function(app, index) { return renderAppCard(app, index); }).join('');
+  // ใช้พื้นที่นี้แสดงเว็บตัวที่หนึ่งแทนการ์ดข่าว/แอป โดยเริ่มจากเมนูเลือกหมวดหมู่
+  grid.innerHTML = '<article class="first-web-full"><div class="first-web-full-frame"><iframe src="https://kct92studio.blogspot.com/" title="ເວັບຕົວທີໜຶ່ງ" loading="lazy"></iframe></div><a href="https://kct92studio.blogspot.com/" target="_blank" rel="noopener" class="first-web-open">↗ ເປີດເວັບຕົວທີໜຶ່ງເຕັມໜ້າ</a></article>';
 }
 
 function renderAppCard(a, index){
@@ -2293,9 +2294,18 @@ function downloadClassPDF(room, month) {
 </script>
 
 <style id="report-template-style">
+  /* หน้าแรกใช้เว็บตัวที่หนึ่งเป็นเนื้อหาหลัก: ตัดข่าว/แอป/สื่อเดิมออกจากการมองเห็น */
+  #news, #books { display:none !important; }
+  #apps .section-intro, #appFormPanel { display:none !important; }
+  #apps { padding-top:1rem; }
+  #appsGrid { display:block; }
+  .first-web-full { width:100%; margin:0; }
+  .first-web-full-frame { width:100%; height:calc(100vh - 120px); min-height:720px; overflow:hidden; border:0; background:#fff; position:relative; }
+  .first-web-full-frame iframe { width:100%; height:1500px; border:0; display:block; transform:translateY(-420px); }
+  .first-web-open { display:block; width:max-content; margin:0.5rem auto; padding:0.5rem 1rem; border-radius:8px; background:var(--navy-950); color:#fff; font-weight:800; font-size:0.82rem; text-decoration:none; }
   .first-web-frame { width:100%; height:420px; overflow:hidden; border:1px solid var(--line); border-radius:12px; background:#fff; position:relative; }
   .first-web-frame iframe { width:100%; height:980px; border:0; display:block; transform:translateY(-250px); }
-  @media(max-width:800px){ .first-web-frame { height:360px; } .first-web-frame iframe { height:900px; transform:translateY(-220px); } }
+  @media(max-width:800px){ .first-web-frame { height:360px; } .first-web-frame iframe { height:900px; transform:translateY(-220px); } .first-web-full-frame { min-height:620px; height:calc(100vh - 90px); } .first-web-full-frame iframe { height:1300px; transform:translateY(-390px); } }
   #reportCardContent.report-template { width: 1120px; max-width:none; padding:14px 16px; color:#111; background:#fff; font-family:"Noto Sans Lao","Phetsarath OT",Arial,sans-serif; }
   #reportCardContent.report-template .detail-header { margin-bottom:6px; border-bottom:1px solid #111; padding-bottom:4px; }
   #reportCardContent.report-template .detail-name { font-size:16px; font-weight:800; }
