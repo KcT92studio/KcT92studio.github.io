@@ -1598,7 +1598,7 @@ async function loadApps(){
     return;
   }
   // ใช้พื้นที่นี้แสดงเว็บตัวที่หนึ่งแทนการ์ดข่าว/แอป โดยเริ่มจากเมนูเลือกหมวดหมู่
-  grid.innerHTML = '<article class="first-web-full"><div class="first-web-full-frame"><iframe src="https://kct92studio.blogspot.com/" title="ເວັບຕົວທີໜຶ່ງ" loading="lazy"></iframe></div><a href="https://kct92studio.blogspot.com/" target="_blank" rel="noopener" class="first-web-open">↗ ເປີດເວັບຕົວທີໜຶ່ງເຕັມໜ້າ</a></article>';
+  grid.innerHTML = '';
 }
 
 function renderAppCard(a, index){
@@ -2295,7 +2295,7 @@ function downloadClassPDF(room, month) {
 
 <style id="report-template-style">
   /* หน้าแรกใช้เว็บตัวที่หนึ่งเป็นเนื้อหาหลัก: ตัดข่าว/แอป/สื่อเดิมออกจากการมองเห็น */
-  #news, #books { display:none !important; }
+  #news, #apps, #books { display:none !important; }
   #apps .section-intro, #appFormPanel { display:none !important; }
   #apps { padding-top:1rem; }
   #appsGrid { display:block; }
