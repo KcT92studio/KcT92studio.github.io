@@ -1,0 +1,28 @@
+.student-portal { max-width:1200px; margin:0 auto; padding:28px 20px 48px; color:#163c52; }
+  .student-portal h1 { margin:0 0 6px; font-size:clamp(1.55rem, 4vw, 2.25rem); }
+  .student-portal .lead { margin:0 0 20px; color:#62727b; }
+  .student-actions { display:flex; gap:10px; flex-wrap:wrap; margin:16px 0; }
+  .month-cards { display:flex; gap:10px; overflow-x:auto; overflow-y:hidden; padding-bottom:8px; margin:16px 0; -webkit-overflow-scrolling:touch; scrollbar-width:thin; flex-wrap:nowrap; }
+  .month-cards::-webkit-scrollbar { height:6px; }
+  .month-cards::-webkit-scrollbar-thumb { background:#cbd8dc; border-radius:3px; }
+  .month-card { flex:0 0 auto; }
+  .student-action, .month-card { border:1px solid #cbd8dc; background:#fff; color:#123d51; border-radius:13px; padding:12px 16px; font-weight:800; cursor:pointer; box-shadow:0 3px 10px rgba(17,56,71,.06); }
+  .student-action:hover, .month-card:hover, .month-card.active { background:#123d51; color:#fff; border-color:#123d51; }
+  .student-info { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:10px; margin:16px 0; }
+  .student-info p { margin:0; padding:11px 12px; border-radius:10px; background:#f7f4ed; font-size:.92rem; }
+  .student-sheet-head { background:#fff; border:1px solid #d8ddd8; border-radius:14px 14px 0 0; padding:20px 18px 12px; margin-top:18px; text-align:center; }
+  .student-sheet-head p { margin:3px 0; font-size:.92rem; color:#314b55; }
+  .student-sheet-title { font-weight:700; color:#173d52; }
+  .student-sheet-wrap { overflow:auto; background:#fff; border:1px solid #d8ddd8; border-top:0; border-radius:0 0 14px 14px; }
+  .student-sheet { border-collapse:collapse; width:max-content; min-width:100%; font-size:12px; }
+  .student-sheet th, .student-sheet td { border:1px solid #7f8b8f; padding:5px 6px; white-space:nowrap; text-align:center; }
+  .student-sheet th { background:#f5e7da; color:#4f251f; font-weight:800; position:sticky; top:0; z-index:1; }
+  .student-sheet td:first-child, .student-sheet th:first-child { position:sticky; left:0; background:#fffaf4; z-index:2; }
+  .student-sheet th:first-child { z-index:3; background:#f5e7da; }
+  .student-no-download { padding:10px 12px; margin:14px 0; border-radius:9px; background:#eef7f7; color:#26565d; font-size:.88rem; }
+  .student-modal { position:fixed; inset:0; z-index:9999; display:flex; align-items:center; justify-content:center; padding:16px; background:rgba(10,31,39,.55); }
+  .student-modal-card { max-width:950px; max-height:90vh; overflow:auto; width:100%; background:#fff; border-radius:16px; padding:20px; }
+  .student-modal-close { float:right; border:0; background:#123d51; color:#fff; border-radius:50%; width:32px; height:32px; cursor:pointer; }
+  #reportCardContent { page-break-inside:auto; } #reportCardContent tr { break-inside:avoid; page-break-inside:avoid; }
+  @media(max-width:600px){ .student-portal{padding:20px 12px 32px}.student-action,.month-card{padding:10px 11px;font-size:.84rem}.student-sheet{font-size:11px}.student-sheet th,.student-sheet td{padding:4px}.student-sheet-head{padding:15px 10px 8px} }
+  @media print { .student-modal-close,.btn-group { display:none!important; } #reportCardContent { width:100%; box-shadow:none; } }
