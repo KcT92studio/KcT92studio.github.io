@@ -9,37 +9,52 @@ function studentInjectStyle(){
   if(document.getElementById('studentPortalStyle'))return;
   const st=document.createElement('style');st.id='studentPortalStyle';
   st.textContent=''
-  +'#mainApp,.student-portal{padding-left:0 !important;padding-right:0 !important;padding-bottom:0 !important;margin-bottom:0 !important;max-width:none !important;width:100% !important;box-sizing:border-box;}'
-  +'body.student-mode{padding-bottom:0 !important;margin-bottom:0 !important;}'
-  +'.student-portal .student-top{padding:6px 12px 0;box-sizing:border-box;}'
-  +'.student-portal .student-top h1{font-size:1.35rem !important;line-height:1.25 !important;margin:0 0 6px !important;}'
+  +'body.student-mode{overflow:hidden !important;}'
+  +'#studentMonthlyModal{z-index:2147483000 !important;}'
+  /* ໜ້າເຕັມຈໍ ບັງສ່ວນຫົວເວັບທັງໝົດ */
+  +'.student-portal{position:fixed !important;top:0;left:0;right:0;bottom:0;z-index:40;display:flex;flex-direction:column;overflow:hidden;padding:0 !important;margin:0 !important;max-width:none !important;width:auto !important;box-sizing:border-box;}'
+  +'.student-portal .student-top{flex:0 0 auto;padding:calc(6px + env(safe-area-inset-top,0px)) 12px 0;box-sizing:border-box;}'
+  +'.student-portal .student-head h1{font-size:1.35rem !important;line-height:1.25 !important;margin:0 0 6px !important;}'
   +'.student-portal .student-actions{display:flex;gap:6px !important;margin:0 0 6px !important;flex-wrap:nowrap;}'
   +'.student-portal .student-action{flex:1 1 0;font-size:0.82rem !important;padding:6px 8px !important;min-height:0 !important;border-radius:14px !important;white-space:nowrap;}'
   +'.student-portal .student-month-title{font-size:0.9rem !important;margin:4px 0 4px !important;line-height:1.2 !important;}'
-  +'.student-portal .month-card{font-size:0.82rem !important;padding:5px 10px !important;min-height:0 !important;}'
-  +'.student-portal #studentMonthCards{margin:0 0 4px !important;padding-bottom:2px !important;gap:6px !important;}'
-  +'.student-portal #studentMonthTable{width:100%;padding:0;margin:0;box-sizing:border-box;}'
-  +'.student-portal .class-report-a4-landscape{max-width:none;width:100%;padding:0;margin:0;background:#fff;box-sizing:border-box;}'
-  +'.student-portal .report-table-wrap{width:100%;overflow:auto;-webkit-overflow-scrolling:touch;padding:0;border:0;border-radius:0;max-height:none;box-sizing:border-box;}'
-  +'.student-portal .class-scores-table thead th{height:auto;padding-bottom:4px;}'
+  /* ແຖບເດືອນ + ປຸ່ມລູກສອນຍ້ອນກັບ */
+  +'.student-portal .student-bar{display:flex;align-items:center;gap:8px;padding:2px 0 6px;}'
+  +'.student-portal .student-back{flex:0 0 auto;width:34px;height:34px;border-radius:50%;border:1px solid rgba(0,0,0,.15);background:#fff;font-size:1.15rem;line-height:1;padding:0;display:flex;align-items:center;justify-content:center;cursor:pointer;}'
+  +'.student-portal #studentMonthCards{flex:1 1 auto;min-width:0;margin:0 !important;padding:0 !important;display:flex;flex-wrap:nowrap;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;}'
+  +'.student-portal .month-card{flex:0 0 auto;font-size:0.82rem !important;padding:5px 10px !important;min-height:0 !important;white-space:nowrap;}'
+  /* ເລື່ອນຕາຕະລາງຂຶ້ນ: ເຊື່ອງຫົວຂໍ້ ແລະປຸ່ມ ເຫຼືອແຕ່ ← ແລະເດືອນ */
+  +'.student-portal.compact .student-head{display:none;}'
+  +'.student-portal.compact .student-top{padding-top:calc(4px + env(safe-area-inset-top,0px));}'
+  /* ຕາຕະລາງ style-04: ເຕັມຊ້າຍ-ຂວາ-ລຸ່ມ */
+  +'.student-portal #studentMonthTable{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;width:100%;padding:0;margin:0;box-sizing:border-box;}'
+  +'.student-portal .class-report-a4-landscape{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;max-width:none;width:100%;padding:0;margin:0;background:#fff;box-sizing:border-box;}'
+  +'.student-portal .report-table-wrap{flex:1 1 auto;min-height:0;width:100%;overflow:auto;-webkit-overflow-scrolling:touch;padding:0;border:0;border-radius:0;max-height:none;box-sizing:border-box;}'
+  +'.student-portal .class-scores-table thead th{height:auto;padding-bottom:4px;position:sticky;top:0;z-index:3;background:#f0f4f7;box-shadow:inset 0 -1px 0 #333,inset -1px 0 0 #333;}'
+  +'.student-portal .class-scores-table thead th:nth-child(1){z-index:5;left:0;}'
   +'.student-portal .class-scores-table th:nth-child(1),.student-portal .class-scores-table td:nth-child(1){text-align:left;padding-left:8px;}'
   +'.student-portal .student-loading{padding:12px 16px;color:#5a6b7a;font-size:14px;}';
   document.head.appendChild(st);
 }
-function studentFitTable(){
-  const host=document.getElementById('studentMonthTable');if(!host)return;
-  const wrap=host.querySelector('.report-table-wrap');if(!wrap)return;
-  const vw=document.documentElement.clientWidth||window.innerWidth;
-  host.style.marginLeft='0';host.style.width=vw+'px';
-  const left=host.getBoundingClientRect().left;
-  host.style.marginLeft=(-left)+'px';
-  const vh=window.innerHeight||document.documentElement.clientHeight;
-  const top=host.getBoundingClientRect().top+(window.scrollY||0);
-  const h=Math.max(vh-top,320);
-  wrap.style.height=h+'px';wrap.style.maxHeight=h+'px';
+function studentGoBack(){
+  const items=document.querySelectorAll('a,button');
+  for(let i=0;i<items.length;i++){
+    const el=items[i];
+    if(el.closest('.student-portal'))continue;
+    if((el.textContent||'').indexOf('ກັບຄືນ')>-1){el.click();return;}
+  }
+  if(history.length>1)history.back();
 }
-window.addEventListener('resize',function(){if(document.body.classList.contains('student-mode'))studentFitTable();});
-window.addEventListener('orientationchange',function(){setTimeout(function(){if(document.body.classList.contains('student-mode'))studentFitTable();},250);});
+function studentFitTable(){
+  const portal=document.querySelector('.student-portal');if(!portal)return;
+  const wrap=portal.querySelector('.report-table-wrap');if(!wrap)return;
+  portal.classList.remove('compact');wrap.scrollTop=0;
+  wrap.onscroll=function(){
+    const y=wrap.scrollTop;
+    if(y>24&&!portal.classList.contains('compact'))portal.classList.add('compact');
+    else if(y<=2&&portal.classList.contains('compact'))portal.classList.remove('compact');
+  };
+}
 
 function onLoginSuccessFromAuth(access) {
   currentAccess = access;
@@ -59,7 +74,8 @@ async function studentMonthlyInit(){
   if (!main) return;
   main.style.display='block';
   studentInjectStyle();document.body.classList.add('student-mode');
-  main.innerHTML='<main class="student-portal"><div class="student-top"><h1>ຄະແນນ ແລະ ປຶ້ມຕິດຕາມ</h1><div class="student-actions"><button class="student-action" onclick="studentShowProfile()">👤 ຂໍ້ມູນຂອງຂ້ອຍ</button><button class="student-action" onclick="studentShowMyBook()">📘 ປຶ້ມຕິດຕາມຂອງຂ້ອຍ</button></div><h3 class="student-month-title">ເລືອກເດືອນ</h3><div id="studentMonthCards" class="month-cards"><span>ກຳລັງໂຫຼດ…</span></div></div><div id="studentMonthTable"></div></main>';
+  main.innerHTML='<main class="student-portal"><div class="student-top"><div class="student-head"><h1>ຄະແນນ ແລະ ປຶ້ມຕິດຕາມ</h1><div class="student-actions"><button class="student-action" onclick="studentShowProfile()">👤 ຂໍ້ມູນຂອງຂ້ອຍ</button><button class="student-action" onclick="studentShowMyBook()">📘 ປຶ້ມຕິດຕາມຂອງຂ້ອຍ</button></div><h3 class="student-month-title">ເລືອກເດືອນ</h3></div><div class="student-bar"><button class="student-back" onclick="studentGoBack()" aria-label="ກັບຄືນ">←</button><div id="studentMonthCards" class="month-cards"><span>ກຳລັງໂຫຼດ…</span></div></div></div><div id="studentMonthTable"></div></main>';
+  (function(){const c=getComputedStyle(document.body).backgroundColor;const bg=(!c||c==='rgba(0, 0, 0, 0)'||c==='transparent')?'#faf5ea':c;const m=main.querySelector('.student-portal');if(m)m.style.background=bg;})();
   const [monthsRes, profileRes] = await Promise.all([callAPI('getMyMonths',{}), callAPI('getMyStudentProfile',{})]);
   if (!monthsRes || monthsRes.error) { document.getElementById('studentMonthCards').innerHTML='<span>ບໍ່ພົບຂໍ້ມູນເດືອນ</span>'; return; }
   studentMonthsCache = monthsRes.months || [];
