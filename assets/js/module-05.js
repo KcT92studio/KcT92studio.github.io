@@ -30,12 +30,12 @@ function studentInjectStyle(){
   +'.student-portal #studentMonthTable{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;width:100%;padding:0;margin:0;box-sizing:border-box;}'
   +'.student-portal .class-report-a4-landscape{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;max-width:none;width:100%;padding:0 !important;margin:0 !important;border:0 !important;border-radius:0 !important;box-shadow:none !important;background:#fff;box-sizing:border-box;}'
   +'.student-portal .report-table-wrap{flex:1 1 auto;min-height:0;width:100%;overflow:auto;-webkit-overflow-scrolling:touch;padding:0 !important;margin:0 !important;border:0 !important;border-radius:0 !important;box-shadow:none !important;background:#fff !important;max-height:none;box-sizing:border-box;}'
-  +'.student-portal .class-scores-table{margin:0 !important;width:max-content;min-width:100%;border-collapse:separate;border-spacing:0;table-layout:auto;}'
+  +'.student-portal .class-scores-table{margin:0 !important;width:max-content !important;min-width:100%;border-collapse:separate;border-spacing:0;table-layout:fixed;}'
   /* ຄໍລຳຊື່ໃຫ້ແຄບລົງ ແຕ່ຫ້າມຕັດຊື່ເປັນສອງແຖວ */
-  +'.student-portal .class-scores-table th:first-child,.student-portal .class-scores-table td:first-child{width:210px;min-width:210px;max-width:210px;white-space:nowrap;overflow:visible;}'
+  +'.student-portal .class-scores-table th:first-child,.student-portal .class-scores-table td:first-child{width:180px !important;min-width:180px !important;max-width:180px !important;white-space:nowrap;overflow:hidden;text-overflow:clip;}'
   /* ຄໍລຳ GD, TB ແລະຄໍລຳຄະແນນອື່ນໆໃຫ້ແຄບ */
-  +'.student-portal .class-scores-table thead th:nth-child(n+2){writing-mode:vertical-rl;transform:rotate(180deg);white-space:nowrap;text-align:left;width:18px;min-width:18px;max-width:18px;font-size:7px;padding:3px 2px 4px;}'
-  +'.student-portal .class-scores-table tbody td:nth-child(n+2){width:18px;min-width:18px;max-width:18px;white-space:nowrap;padding-left:3px;padding-right:3px;}'
+  +'.student-portal .class-scores-table thead th:nth-child(n+2){writing-mode:vertical-rl;transform:rotate(180deg);white-space:nowrap;text-align:left;width:34px !important;min-width:34px !important;max-width:34px !important;font-size:8px;padding:3px 2px 4px;}'
+  +'.student-portal .class-scores-table tbody td:nth-child(n+2){width:34px !important;min-width:34px !important;max-width:34px !important;white-space:nowrap;padding-left:3px;padding-right:3px;font-size:11px;}'
   /* ຫົວຕາຕະລາງຕິດຂອບເທິງຂອງພື້ນທີ່ເລື່ອນ ແລະບໍ່ເຫຼືອຊ່ອງວ່າງ */
   +'.student-portal .report-table-wrap{position:relative;align-self:stretch;overflow:auto;scroll-padding-top:0;padding-top:0 !important;}'
   +'.student-portal .class-scores-table thead th{height:auto;padding-bottom:4px;position:sticky;top:0;z-index:3;background:#f0f4f7;box-shadow:inset 0 -1px 0 #333,inset -1px 0 0 #333;}'
