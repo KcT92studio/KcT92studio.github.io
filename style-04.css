@@ -39,6 +39,11 @@
   /* ຫົວຂໍ້ວິຊາແນວຕັ້ງ: ເລີ່ມຈາກຖັນທີ 5 ຫຼັງຈາກຂໍ້ມູນນັກຮຽນ */
   .class-scores-table thead th:nth-child(n+5) { writing-mode:vertical-rl; transform:rotate(180deg); white-space:nowrap; text-align:left; width:25px; min-width:25px; font-size:7px; }
   .class-scores-table tr:nth-child(even) { background:#f9f9f9; }
+  /* ປັບໜ້າຄະແນນລວມຫ້ອງ: ເຕັມຈໍ + ຊື່ຊິດຊ້າຍ (ຄໍລຳທີ 2 = ຊື່) */
+  .class-score-fullscreen #classMonthTableHost { max-height:calc(95vh - 140px) !important; width:100%; -webkit-overflow-scrolling:touch; }
+  .class-score-fullscreen .class-report-a4-landscape { max-width:none; width:100%; padding:0; }
+  .class-scores-table { min-width:100%; }
+  .class-scores-table th:nth-child(2), .class-scores-table td:nth-child(2) { width:170px; min-width:170px; text-align:left; white-space:nowrap; padding-left:8px; }
 
   #reportCardContent.report-template .legacy-score-edit { width:100%; box-sizing:border-box; border:0; background:#fffbe8; text-align:center; font-size:8px; padding:0; min-width:0; }
   #reportCardContent.report-template .legacy-score-edit[readonly] { background:#fff; color:#111; cursor:default; }
