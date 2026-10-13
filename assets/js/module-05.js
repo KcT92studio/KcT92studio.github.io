@@ -37,7 +37,7 @@ async function studentOpenMonth(month){
   const title=(res.titleRows||[]).map(function(row){return '<p class="student-sheet-title">'+monthlyEsc(row.filter(Boolean).join(' '))+'</p>';}).join('');
   const head=(res.header||[]).map(function(cell){return '<th>'+monthlyEsc(cell)+'</th>';}).join('');
   const rows=(res.rows||[]).map(function(row){return '<tr>'+row.map(function(cell){return '<td>'+monthlyEsc(cell)+'</td>';}).join('')+'</tr>';}).join('');
-  host.innerHTML='<div class="student-sheet-head">'+title+'<p>ຫ້ອງ '+monthlyEsc(res.room)+' — ເດືອນ '+monthlyEsc(res.month)+'</p></div><div class="student-sheet-wrap"><table class="student-sheet"><thead><tr>'+head+'</tr></thead><tbody>'+rows+'</tbody></table></div>';
+  host.innerHTML='<div class="student-sheet-head">'+title+'<p>ຫ້ອງ '+monthlyEsc(res.room)+' — ເດືອນ '+monthlyEsc(res.month)+'</p></div><div class="class-report-a4-landscape"><div class="report-table-wrap" style="overflow:auto; max-height:60vh;"><table class="class-scores-table"><thead><tr>'+head+'</tr></thead><tbody>'+rows+'</tbody></table></div></div>';
 }
 function studentShowProfile(){
   const s=studentProfileCache||{};
