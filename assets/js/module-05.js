@@ -30,12 +30,17 @@ function studentInjectStyle(){
   +'.student-portal #studentMonthTable{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;width:100%;padding:0;margin:0;box-sizing:border-box;}'
   +'.student-portal .class-report-a4-landscape{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;max-width:none;width:100%;padding:0 !important;margin:0 !important;border:0 !important;border-radius:0 !important;box-shadow:none !important;background:#fff;box-sizing:border-box;}'
   +'.student-portal .report-table-wrap{flex:1 1 auto;min-height:0;width:100%;overflow:auto;-webkit-overflow-scrolling:touch;padding:0 !important;margin:0 !important;border:0 !important;border-radius:0 !important;box-shadow:none !important;background:#fff !important;max-height:none;box-sizing:border-box;}'
-  +'.student-portal .class-scores-table{margin:0 !important;width:100%;}'
-  +'.student-portal .class-scores-table thead th:nth-child(n+2){writing-mode:vertical-rl;transform:rotate(180deg);white-space:nowrap;text-align:left;width:25px;min-width:25px;font-size:7px;}'
-  +'.student-portal .class-scores-table tbody td:nth-child(n+2){width:25px;min-width:25px;}'
+  +'.student-portal .class-scores-table{margin:0 !important;width:max-content;min-width:100%;border-collapse:separate;border-spacing:0;table-layout:auto;}'
+  /* ຄໍລຳຊື່ໃຫ້ແຄບລົງ ແຕ່ຫ້າມຕັດຊື່ເປັນສອງແຖວ */
+  +'.student-portal .class-scores-table th:first-child,.student-portal .class-scores-table td:first-child{width:210px;min-width:210px;max-width:210px;white-space:nowrap;overflow:visible;}'
+  /* ຄໍລຳ GD, TB ແລະຄໍລຳຄະແນນອື່ນໆໃຫ້ແຄບ */
+  +'.student-portal .class-scores-table thead th:nth-child(n+2){writing-mode:vertical-rl;transform:rotate(180deg);white-space:nowrap;text-align:left;width:18px;min-width:18px;max-width:18px;font-size:7px;padding:3px 2px 4px;}'
+  +'.student-portal .class-scores-table tbody td:nth-child(n+2){width:18px;min-width:18px;max-width:18px;white-space:nowrap;padding-left:3px;padding-right:3px;}'
+  /* ຫົວຕາຕະລາງຕິດຂອບເທິງຂອງພື້ນທີ່ເລື່ອນ ແລະບໍ່ເຫຼືອຊ່ອງວ່າງ */
+  +'.student-portal .report-table-wrap{position:relative;align-self:stretch;overflow:auto;scroll-padding-top:0;padding-top:0 !important;}'
   +'.student-portal .class-scores-table thead th{height:auto;padding-bottom:4px;position:sticky;top:0;z-index:3;background:#f0f4f7;box-shadow:inset 0 -1px 0 #333,inset -1px 0 0 #333;}'
-  +'.student-portal .class-scores-table thead th:nth-child(1){z-index:5;left:0;}'
-  +'.student-portal .class-scores-table th:nth-child(1),.student-portal .class-scores-table td:nth-child(1){text-align:left;padding-left:8px;}'
+  +'.student-portal .class-scores-table thead th:first-child{position:sticky;left:0;top:0;z-index:6;background:#f0f4f7;}'
+  +'.student-portal .class-scores-table th:first-child,.student-portal .class-scores-table td:first-child{text-align:left;padding-left:8px;}'
   +'.student-portal .student-loading{padding:12px 16px;color:#5a6b7a;font-size:14px;}';
   document.head.appendChild(st);
 }
@@ -91,8 +96,17 @@ async function studentOpenMonth(month){
   const host=document.getElementById('studentMonthTable');host.innerHTML='<div class="student-loading">ກຳລັງໂຫຼດ '+monthlyEsc(month)+'…</div>';
   const res=await callAPI('getMyClassMonth',{month:month});
   if(!res||res.error){host.innerHTML='<div class="student-loading">ບໍ່ສາມາດເປີດຕາຕະລາງໄດ້</div>';return;}
-  const dropCols=function(r){r=r||[];return r.length>4?r.filter(function(_,i){return i<1||i>3;}):r;};
-  const head=dropCols(res.header).map(function(cell){return '<th>'+monthlyEsc(cell)+'</th>';}).join('');
+  /* ເຊື່ອງ GD, TB ແລະຄໍລຳຊັ້ນຮຽນຈາກສ່ວນສະແດງ ໂດຍບໍ່ປ່ຽນຂໍ້ມູນຕົ້ນສະບັບ */
+  const rawHeader=res.header||[];
+  const hiddenCols=[];
+  rawHeader.forEach(function(cell,i){
+    const label=String(cell==null?'':cell).trim().toLowerCase().replace(/\\s+/g,'');
+    if(label==='gd'||label==='tb'||label.indexOf('ຊັ້ນຮຽນ')!==-1||label.indexOf('ຫ້ອງຮຽນ')!==-1)hiddenCols.push(i);
+  });
+  /* ຖ້າຫົວຕາຕະລາງບໍ່ມີຊື່ຄໍລຳທີ່ກວດພົບ ໃຊ້ລຳດັບເກົ່າເປັນຕົວສຳຮອງ */
+  if(!hiddenCols.length&&rawHeader.length>4)hiddenCols.push(1,2,3);
+  const dropCols=function(r){r=r||[];return r.filter(function(_,i){return hiddenCols.indexOf(i)===-1;});};
+  const head=dropCols(rawHeader).map(function(cell){return '<th>'+monthlyEsc(cell)+'</th>';}).join('');
   const rows=(res.rows||[]).map(function(row){return '<tr>'+dropCols(row).map(function(cell){return '<td>'+monthlyEsc(cell)+'</td>';}).join('')+'</tr>';}).join('');
   host.innerHTML='<div class="class-report-a4-landscape"><div class="report-table-wrap"><table class="report-table class-scores-table"><thead><tr>'+head+'</tr></thead><tbody>'+rows+'</tbody></table></div></div>';
   studentFitTable();
