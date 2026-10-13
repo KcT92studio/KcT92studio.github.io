@@ -4,6 +4,43 @@ function monthlyEsc(value){const e=document.createElement('div');e.textContent=v
 function monthlyClose(){const modal=document.getElementById('studentMonthlyModal');if(modal)modal.remove();}
 function monthlyModal(content){monthlyClose();const wrap=document.createElement('div');wrap.id='studentMonthlyModal';wrap.className='student-modal';wrap.innerHTML='<div class="student-modal-card"><button class="student-modal-close" onclick="monthlyClose()">×</button>'+content+'</div>';wrap.addEventListener('click',function(event){if(event.target===wrap)monthlyClose();});document.body.appendChild(wrap);}
 
+
+function studentInjectStyle(){
+  if(document.getElementById('studentPortalStyle'))return;
+  const st=document.createElement('style');st.id='studentPortalStyle';
+  st.textContent=''
+  +'#mainApp,.student-portal{padding-left:0 !important;padding-right:0 !important;padding-bottom:0 !important;margin-bottom:0 !important;max-width:none !important;width:100% !important;box-sizing:border-box;}'
+  +'body.student-mode{padding-bottom:0 !important;margin-bottom:0 !important;}'
+  +'.student-portal .student-top{padding:6px 12px 0;box-sizing:border-box;}'
+  +'.student-portal .student-top h1{font-size:1.35rem !important;line-height:1.25 !important;margin:0 0 6px !important;}'
+  +'.student-portal .student-actions{display:flex;gap:6px !important;margin:0 0 6px !important;flex-wrap:nowrap;}'
+  +'.student-portal .student-action{flex:1 1 0;font-size:0.82rem !important;padding:6px 8px !important;min-height:0 !important;border-radius:14px !important;white-space:nowrap;}'
+  +'.student-portal .student-month-title{font-size:0.9rem !important;margin:4px 0 4px !important;line-height:1.2 !important;}'
+  +'.student-portal .month-card{font-size:0.82rem !important;padding:5px 10px !important;min-height:0 !important;}'
+  +'.student-portal #studentMonthCards{margin:0 0 4px !important;padding-bottom:2px !important;gap:6px !important;}'
+  +'.student-portal #studentMonthTable{width:100%;padding:0;margin:0;box-sizing:border-box;}'
+  +'.student-portal .class-report-a4-landscape{max-width:none;width:100%;padding:0;margin:0;background:#fff;box-sizing:border-box;}'
+  +'.student-portal .report-table-wrap{width:100%;overflow:auto;-webkit-overflow-scrolling:touch;padding:0;border:0;border-radius:0;max-height:none;box-sizing:border-box;}'
+  +'.student-portal .class-scores-table thead th{height:auto;padding-bottom:4px;}'
+  +'.student-portal .class-scores-table th:nth-child(1),.student-portal .class-scores-table td:nth-child(1){text-align:left;padding-left:8px;}'
+  +'.student-portal .student-loading{padding:12px 16px;color:#5a6b7a;font-size:14px;}';
+  document.head.appendChild(st);
+}
+function studentFitTable(){
+  const host=document.getElementById('studentMonthTable');if(!host)return;
+  const wrap=host.querySelector('.report-table-wrap');if(!wrap)return;
+  const vw=document.documentElement.clientWidth||window.innerWidth;
+  host.style.marginLeft='0';host.style.width=vw+'px';
+  const left=host.getBoundingClientRect().left;
+  host.style.marginLeft=(-left)+'px';
+  const vh=window.innerHeight||document.documentElement.clientHeight;
+  const top=host.getBoundingClientRect().top+(window.scrollY||0);
+  const h=Math.max(vh-top,320);
+  wrap.style.height=h+'px';wrap.style.maxHeight=h+'px';
+}
+window.addEventListener('resize',function(){if(document.body.classList.contains('student-mode'))studentFitTable();});
+window.addEventListener('orientationchange',function(){setTimeout(function(){if(document.body.classList.contains('student-mode'))studentFitTable();},250);});
+
 function onLoginSuccessFromAuth(access) {
   currentAccess = access;
   const badge = document.getElementById('userBadge');
@@ -21,7 +58,8 @@ async function studentMonthlyInit(){
   const main = document.getElementById('mainApp');
   if (!main) return;
   main.style.display='block';
-  main.innerHTML='<main class="student-portal"><div class="eyebrow">ລະບົບນັກຮຽນ</div><h1>ຄະແນນ ແລະ ປຶ້ມຕິດຕາມ</h1><p class="lead">ເບິ່ງຂໍ້ມູນສ່ວນຕົວ ແລະ ຕາຕະລາງຄະແນນປະຈຳເດືອນຂອງຫ້ອງ ' + monthlyEsc(currentAccess.room || '') + '</p><div class="student-actions"><button class="student-action" onclick="studentShowProfile()">👤 ຂໍ້ມູນຂອງຂ້ອຍ</button><button class="student-action" onclick="studentShowMyBook()">📘 ປຶ້ມຕິດຕາມຂອງຂ້ອຍ</button></div><div class="student-no-download">🔒 ໜ້ານີ້ເບິ່ງໄດ້ຢ່າງດຽວ — ບໍ່ມີການແກ້ໄຂ ຫຼື ດາວໂຫຼດຄະແນນຫ້ອງ</div><h3 style="margin:20px 0 4px;">ເລືອກເດືອນ</h3><div id="studentMonthCards" class="month-cards"><span>ກຳລັງໂຫຼດ…</span></div><div id="studentMonthTable"><div class="student-no-download">ເລືອກເດືອນເພື່ອເບິ່ງຕາຕະລາງຄະແນນທັງຫ້ອງ</div></div></main>';
+  studentInjectStyle();document.body.classList.add('student-mode');
+  main.innerHTML='<main class="student-portal"><div class="student-top"><h1>ຄະແນນ ແລະ ປຶ້ມຕິດຕາມ</h1><div class="student-actions"><button class="student-action" onclick="studentShowProfile()">👤 ຂໍ້ມູນຂອງຂ້ອຍ</button><button class="student-action" onclick="studentShowMyBook()">📘 ປຶ້ມຕິດຕາມຂອງຂ້ອຍ</button></div><h3 class="student-month-title">ເລືອກເດືອນ</h3><div id="studentMonthCards" class="month-cards"><span>ກຳລັງໂຫຼດ…</span></div></div><div id="studentMonthTable"></div></main>';
   const [monthsRes, profileRes] = await Promise.all([callAPI('getMyMonths',{}), callAPI('getMyStudentProfile',{})]);
   if (!monthsRes || monthsRes.error) { document.getElementById('studentMonthCards').innerHTML='<span>ບໍ່ພົບຂໍ້ມູນເດືອນ</span>'; return; }
   studentMonthsCache = monthsRes.months || [];
@@ -31,13 +69,13 @@ async function studentMonthlyInit(){
 }
 async function studentOpenMonth(month){
   document.querySelectorAll('.month-card').forEach(function(button){button.classList.toggle('active',button.textContent.trim().endsWith(month));});
-  const host=document.getElementById('studentMonthTable');host.innerHTML='<div class="student-no-download">ກຳລັງໂຫຼດຕາຕະລາງ '+monthlyEsc(month)+'…</div>';
+  const host=document.getElementById('studentMonthTable');host.innerHTML='<div class="student-loading">ກຳລັງໂຫຼດ '+monthlyEsc(month)+'…</div>';
   const res=await callAPI('getMyClassMonth',{month:month});
-  if(!res||res.error){host.innerHTML='<div class="student-no-download">ບໍ່ສາມາດເປີດຕາຕະລາງໄດ້</div>';return;}
-  const title=(res.titleRows||[]).map(function(row){return '<p class="student-sheet-title">'+monthlyEsc(row.filter(Boolean).join(' '))+'</p>';}).join('');
+  if(!res||res.error){host.innerHTML='<div class="student-loading">ບໍ່ສາມາດເປີດຕາຕະລາງໄດ້</div>';return;}
   const head=(res.header||[]).map(function(cell){return '<th>'+monthlyEsc(cell)+'</th>';}).join('');
   const rows=(res.rows||[]).map(function(row){return '<tr>'+row.map(function(cell){return '<td>'+monthlyEsc(cell)+'</td>';}).join('')+'</tr>';}).join('');
-  host.innerHTML='<div class="student-sheet-head">'+title+'<p>ຫ້ອງ '+monthlyEsc(res.room)+' — ເດືອນ '+monthlyEsc(res.month)+'</p></div><div class="class-report-a4-landscape"><div class="report-table-wrap" style="overflow:auto; max-height:60vh;"><table class="class-scores-table"><thead><tr>'+head+'</tr></thead><tbody>'+rows+'</tbody></table></div></div>';
+  host.innerHTML='<div class="class-report-a4-landscape"><div class="report-table-wrap"><table class="report-table class-scores-table"><thead><tr>'+head+'</tr></thead><tbody>'+rows+'</tbody></table></div></div>';
+  studentFitTable();
 }
 function studentShowProfile(){
   const s=studentProfileCache||{};
@@ -48,7 +86,7 @@ async function studentShowMyBook(){
   const res=await callAPI('getMyReport',{});if(!res||res.error){monthlyModal('<div class="student-no-download">ບໍ່ພົບປຶ້ມຕິດຕາມ</div>');return;}
   const subjects=res.subjects||[], headers=subjects.map(function(item){return '<th>'+monthlyEsc(item.subject||'')+'</th>';}).join('');
   const rows=(res.columns||[]).map(function(month, index){return '<tr><th>'+monthlyEsc(month)+'</th>'+subjects.map(function(item){return '<td>'+monthlyEsc(item.scores&&item.scores[index]!=null?item.scores[index]:'')+'</td>';}).join('')+'</tr>';}).join('');
-  monthlyModal('<h2 style="margin-top:0;">📘 ປຶ້ມຕິດຕາມຂອງຂ້ອຍ</h2><div class="student-sheet-wrap"><table class="student-sheet"><thead><tr><th>ເດືອນ</th>'+headers+'</tr></thead><tbody>'+rows+'</tbody></table></div><div class="student-no-download">ເບິ່ງໄດ້ຢ່າງດຽວ — ບໍ່ມີປຸ່ມດາວໂຫຼດ ຫຼື ແກ້ໄຂ</div>');
+  monthlyModal('<h2 style="margin-top:0;">📘 ປຶ້ມຕິດຕາມຂອງຂ້ອຍ</h2><div class="student-sheet-wrap"><table class="student-sheet"><thead><tr><th>ເດືອນ</th>'+headers+'</tr></thead><tbody>'+rows+'</tbody></table></div>');
 }
 function downloadPDF(filename){const element=document.getElementById('reportCardContent');if(!element||!window.html2pdf)return;html2pdf().set({margin:0.28,filename:(filename||'report')+'.pdf',html2canvas:{scale:2},pagebreak:{mode:['css','legacy'],avoid:['tr']},jsPDF:{unit:'in',format:'a4',orientation:'landscape'}}).from(element).save();}
 
