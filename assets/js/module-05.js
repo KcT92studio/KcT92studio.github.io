@@ -28,8 +28,11 @@ function studentInjectStyle(){
   +'.student-portal.compact .student-top{padding-top:calc(4px + env(safe-area-inset-top,0px));}'
   /* ຕາຕະລາງ style-04: ເຕັມຊ້າຍ-ຂວາ-ລຸ່ມ */
   +'.student-portal #studentMonthTable{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;width:100%;padding:0;margin:0;box-sizing:border-box;}'
-  +'.student-portal .class-report-a4-landscape{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;max-width:none;width:100%;padding:0;margin:0;background:#fff;box-sizing:border-box;}'
-  +'.student-portal .report-table-wrap{flex:1 1 auto;min-height:0;width:100%;overflow:auto;-webkit-overflow-scrolling:touch;padding:0;border:0;border-radius:0;max-height:none;box-sizing:border-box;}'
+  +'.student-portal .class-report-a4-landscape{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;max-width:none;width:100%;padding:0 !important;margin:0 !important;border:0 !important;border-radius:0 !important;box-shadow:none !important;background:#fff;box-sizing:border-box;}'
+  +'.student-portal .report-table-wrap{flex:1 1 auto;min-height:0;width:100%;overflow:auto;-webkit-overflow-scrolling:touch;padding:0 !important;margin:0 !important;border:0 !important;border-radius:0 !important;box-shadow:none !important;background:#fff !important;max-height:none;box-sizing:border-box;}'
+  +'.student-portal .class-scores-table{margin:0 !important;width:100%;}'
+  +'.student-portal .class-scores-table thead th:nth-child(n+2){writing-mode:vertical-rl;transform:rotate(180deg);white-space:nowrap;text-align:left;width:25px;min-width:25px;font-size:7px;}'
+  +'.student-portal .class-scores-table tbody td:nth-child(n+2){width:25px;min-width:25px;}'
   +'.student-portal .class-scores-table thead th{height:auto;padding-bottom:4px;position:sticky;top:0;z-index:3;background:#f0f4f7;box-shadow:inset 0 -1px 0 #333,inset -1px 0 0 #333;}'
   +'.student-portal .class-scores-table thead th:nth-child(1){z-index:5;left:0;}'
   +'.student-portal .class-scores-table th:nth-child(1),.student-portal .class-scores-table td:nth-child(1){text-align:left;padding-left:8px;}'
@@ -88,8 +91,9 @@ async function studentOpenMonth(month){
   const host=document.getElementById('studentMonthTable');host.innerHTML='<div class="student-loading">ກຳລັງໂຫຼດ '+monthlyEsc(month)+'…</div>';
   const res=await callAPI('getMyClassMonth',{month:month});
   if(!res||res.error){host.innerHTML='<div class="student-loading">ບໍ່ສາມາດເປີດຕາຕະລາງໄດ້</div>';return;}
-  const head=(res.header||[]).map(function(cell){return '<th>'+monthlyEsc(cell)+'</th>';}).join('');
-  const rows=(res.rows||[]).map(function(row){return '<tr>'+row.map(function(cell){return '<td>'+monthlyEsc(cell)+'</td>';}).join('')+'</tr>';}).join('');
+  const dropCols=function(r){r=r||[];return r.length>4?r.filter(function(_,i){return i<1||i>3;}):r;};
+  const head=dropCols(res.header).map(function(cell){return '<th>'+monthlyEsc(cell)+'</th>';}).join('');
+  const rows=(res.rows||[]).map(function(row){return '<tr>'+dropCols(row).map(function(cell){return '<td>'+monthlyEsc(cell)+'</td>';}).join('')+'</tr>';}).join('');
   host.innerHTML='<div class="class-report-a4-landscape"><div class="report-table-wrap"><table class="report-table class-scores-table"><thead><tr>'+head+'</tr></thead><tbody>'+rows+'</tbody></table></div></div>';
   studentFitTable();
 }
