@@ -23,21 +23,22 @@
   #reportCardContent.report-template .report-table th { background:#fff; font-size:8px; font-weight:800; white-space:normal; }
   #reportCardContent.report-template .report-table tr { break-inside:avoid; page-break-inside:avoid; }
   
-  /* ຕາຕະລາງຄະແນນລວມຫ້ອງແບບ Excel A4 ແນວນອນ */
+  /* ຮູບແບບຕາຕະລາງປັບໃຫ້ຕາມ module-05; ຄົງໂຄງສ້າງຄໍລຳຂອງ Admin/Teacher */
   .class-report-a4-landscape { width:100%; max-width:1120px; box-sizing:border-box; background:#fff; padding:5px; margin:0 auto; }
   .class-score-fullscreen { overflow:auto; }
   .class-score-fullscreen .report-table-wrap { width:100%; overflow:auto; }
-  .class-scores-table { width:100%; border-collapse:collapse; font-size:8px; table-layout:fixed; }
-  .class-scores-table th, .class-scores-table td { border:1px solid #333; padding:2px 1px; text-align:center; overflow:hidden; line-height:1.05; }
-  .class-scores-table thead th { height:88px; vertical-align:bottom; padding-bottom:5px; background:#f0f4f7; }
-  /* ລອຍສະເພາະຄໍລຳລາຍຊື່ເທົ່ານັ້ນ; ເພດ/ຫ້ອງ/ຄະແນນໃຫ້ເລື່ອນໄປນຳກັນ */
-  .class-scores-table th:nth-child(1), .class-scores-table td:nth-child(1) { position:sticky; left:0; z-index:2; background:#fff; width:145px; min-width:145px; text-align:left; white-space:nowrap; }
-  .class-scores-table thead th:nth-child(1) { z-index:4; background:#f0f4f7; }
+  .class-scores-table { margin:0 !important; width:100%; border-collapse:collapse; font-size:8px; table-layout:fixed; }
+  .class-scores-table th, .class-scores-table td { border:1px solid #333; padding:2px 1px; text-align:center; vertical-align:middle; overflow:hidden; line-height:1.15; font-weight:600; }
+  .class-scores-table thead th { height:88px; vertical-align:bottom; padding-bottom:4px; position:sticky; top:0; z-index:3; background:#f0f4f7; box-shadow:inset 0 -1px 0 #333,inset -1px 0 0 #333; font-weight:800; }
+  /* ລອຍສະເພາະຄໍລຳລາຍຊື່; ຄໍລຳອື່ນເລື່ອນໄປນຳກັນ */
+  .class-scores-table th:nth-child(1), .class-scores-table td:nth-child(1) { position:sticky; left:0; z-index:2; background:#fff; width:130px; min-width:130px; max-width:130px; text-align:left; white-space:nowrap; padding-left:8px; }
+  .class-scores-table thead th:nth-child(1) { z-index:5; background:#f0f4f7; }
   .class-scores-table th:nth-child(2), .class-scores-table td:nth-child(2) { width:36px; min-width:36px; }
   .class-scores-table th:nth-child(3), .class-scores-table td:nth-child(3) { width:45px; min-width:45px; }
   .class-scores-table th:nth-child(4), .class-scores-table td:nth-child(4) { width:58px; min-width:58px; }
-  /* ຫົວຂໍ້ວິຊາແນວຕັ້ງ: ເລີ່ມຈາກຖັນທີ 5 ຫຼັງຈາກຂໍ້ມູນນັກຮຽນ */
-  .class-scores-table thead th:nth-child(n+5) { writing-mode:vertical-rl; transform:rotate(180deg); white-space:nowrap; text-align:left; width:25px; min-width:25px; font-size:7px; }
+  /* ຫົວຂໍ້ວິຊາເລີ່ມຖັນທີ 5: ຮູບແບບແນວຕັ້ງເໝືອນແບບ 05 */
+  .class-scores-table thead th:nth-child(n+5) { writing-mode:vertical-rl; transform:rotate(180deg); white-space:nowrap; text-align:left; width:25px; min-width:25px; max-width:25px; font-size:7px; font-weight:800; }
+  .class-scores-table tbody td:nth-child(n+5) { width:25px; min-width:25px; max-width:25px; text-align:center; white-space:nowrap; font-size:8px; font-weight:700; }
   .class-scores-table tr:nth-child(even) { background:#f9f9f9; }
   /* ປັບໜ້າຄະແນນລວມຫ້ອງ: ເຕັມຈໍທັງ 4 ດ້ານ + ຊື່ຊິດຊ້າຍ (ໃຊ້ #appSection ເພື່ອຊະນະ .report-table ໃນ style-01) */
   #appSection .class-score-fullscreen { padding:8px 4px; border-radius:0; width:100vw !important; max-width:100vw !important; height:100vh !important; height:100dvh !important; max-height:100vh !important; max-height:100dvh !important; box-sizing:border-box; display:flex; flex-direction:column; overflow:hidden; }
