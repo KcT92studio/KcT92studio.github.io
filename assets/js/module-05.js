@@ -166,4 +166,4 @@ function downloadClassPDF(room, month) {
   const element = document.querySelector('#classMonthTableHost .class-report-a4-landscape');
   if (!element || !window.html2pdf) return;
   html2pdf().set({margin:0.79, filename:'ຄະແນນຫ້ອງ_'+room+'_'+month+'.pdf', image:{type:'jpeg',quality:0.98}, html2canvas:{scale:2, useCORS:true}, pagebreak:{mode:['css','legacy'],avoid:['tr']}, jsPDF:{unit:'in',format:'a4',orientation:'landscape'}}).from(element).save();
-}
+    }
