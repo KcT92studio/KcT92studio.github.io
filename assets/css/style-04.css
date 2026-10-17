@@ -30,10 +30,10 @@
   .class-scores-table { margin:0 !important; width:100%; border-collapse:collapse; font-size:8px; table-layout:fixed; }
   .class-scores-table th, .class-scores-table td { border:1px solid #333; padding:2px 1px; text-align:center; vertical-align:middle; overflow:hidden; line-height:1.15; font-weight:600; }
   .class-scores-table thead th { height:88px; vertical-align:bottom; padding:3px 2px 4px; position:sticky; top:0; z-index:3; background:#f0f4f7; box-shadow:inset 0 -1px 0 #333,inset -1px 0 0 #333; font-weight:800; }
-  /* ເຊື່ອງ 3 ຄໍລຳຂໍ້ມູນຄືກັບ module-05: GD, TB ແລະຊັ້ນ/ຫ້ອງຮຽນ */
-  .class-scores-table thead th:nth-child(2), .class-scores-table tbody td:nth-child(2),
-  .class-scores-table thead th:nth-child(3), .class-scores-table tbody td:nth-child(3),
-  .class-scores-table thead th:nth-child(4), .class-scores-table tbody td:nth-child(4) { display:none !important; }
+  /* ເຊື່ອງ 3 ຄໍລຳ (GD, TB, ຊັ້ນ/ຫ້ອງ) ສະເພາະໜ້າຄູ/ແອດມິນ; ໜ້ານັກຮຽນ (student-mode) module-05 ຕັດຄໍລຳອອກຈາກ DOM ແລ້ວ ຫ້າມເຊື່ອງຊ້ຳ */
+  body:not(.student-mode) .class-scores-table thead th:nth-child(2), body:not(.student-mode) .class-scores-table tbody td:nth-child(2),
+  body:not(.student-mode) .class-scores-table thead th:nth-child(3), body:not(.student-mode) .class-scores-table tbody td:nth-child(3),
+  body:not(.student-mode) .class-scores-table thead th:nth-child(4), body:not(.student-mode) .class-scores-table tbody td:nth-child(4) { display:none !important; }
   /* ລອຍຄໍລຳຊື່ໄວ້; ຄໍລຳຄະແນນເລື່ອນໄດ້ ແລະຫົວຕາຕະລາງຕິດເທິງ */
   .class-scores-table th:nth-child(1), .class-scores-table td:nth-child(1) { position:sticky; left:0; z-index:2; background:#fff; width:130px; min-width:130px; max-width:130px; text-align:left; white-space:nowrap; padding-left:8px; }
   .class-scores-table thead th:nth-child(1) { z-index:5; background:#f0f4f7; }
