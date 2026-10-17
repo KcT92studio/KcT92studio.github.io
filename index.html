@@ -17,11 +17,12 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#16352C">
+    <link rel="preconnect" href="https://script.google.com">
+    <link rel="preconnect" href="https://script.googleusercontent.com" crossorigin>
+    <link rel="preconnect" href="https://accounts.google.com" crossorigin>
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2698434787444792" crossorigin="anonymous"></script>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <!-- xlsx / html2pdf ຖືກໂຫຼດແບບ lazy ໃນ module-02.js (ensureExportLibs) ເພື່ອບໍ່ໃຫ້ບລັອກການເປີດໜ້າເວັບ -->
     <!-- required by the embedded student/score app (#appSection) -->
     
     
@@ -259,16 +260,20 @@
   <div id="loginStep" style="background:white; padding:30px; border-radius:0 0 16px 16px; box-shadow:0 4px 20px rgba(0,0,0,0.1);">
     <p style="text-align:center; color:#666; margin:0 0 20px; font-size:15px;">ກະລຸນາ Login ດ້ວຍ Google</p>
     <div id="google-login-btn" style="display:flex; justify-content:center; margin:20px 0; min-height: 40px;"></div>
+    <div id="loginBusy" role="status" aria-live="polite">
+      <div class="kct-spin"></div>
+      <p id="loginBusyText" style="margin:14px 0 0; font-size:15px; font-weight:600; color:#2A2420;">ກຳລັງເຂົ້າສູ່ລະບົບ…</p>
+      <p id="loginBusySub" style="margin:6px 0 0; font-size:12px; color:#888;">ກະລຸນາລໍຖ້າ ຢ່າປິດໜ້ານີ້</p>
+    </div>
     <div id="debug-error" style="display:none; margin-top:15px; padding:10px; background:#fff5f5; border:1px solid #feb2b2; border-radius:8px; color:#c53030; font-size:12px; text-align:left;"></div>
   </div>
   
   <div id="requestStep" style="display:none; background:white; padding:30px; border-radius:0 0 16px 16px; box-shadow:0 4px 20px rgba(0,0,0,0.1);">
     <p style="margin:0 0 16px; font-weight:600; color:#2A2420;">📝 ຍັງບໍ່ເຄີຍລົງທະບຽນ — ຂໍສິດເຂົ້າລະບົບ</p>
     <p style="margin:0 0 12px; font-size:13px; color:#666;">ກະລຸນາລະບຸຫ້ອງຮຽນຂອງທ່ານ:</p>
-    <input id="nameReqInput" placeholder="ຊື່–ນາມສະກຸນ" style="width:100%; padding:12px 14px; margin:6px 0 10px; box-sizing:border-box; border:2px solid #D8CEBB; border-radius:8px; font-family:inherit; font-size:14px;">
-    <input id="nameReqInput" placeholder="ຊື່–ນາມສະກຸນ" style="width:100%; padding:12px 14px; margin:6px 0 10px; box-sizing:border-box; border:2px solid #D8CEBB; border-radius:8px; font-family:inherit; font-size:14px;">
+    <input id="nameReqInput" autocomplete="name" placeholder="ຊື່–ນາມສະກຸນ" style="width:100%; padding:12px 14px; margin:6px 0 10px; box-sizing:border-box; border:2px solid #D8CEBB; border-radius:8px; font-family:inherit; font-size:14px;">
     <input id="roomReqInput" placeholder="ຫ້ອງ (ເຊັ່ນ ມ.4)" style="width:100%; padding:12px 14px; margin:6px 0 16px; box-sizing:border-box; border:2px solid #D8CEBB; border-radius:8px; font-family:inherit; font-size:14px;">
-    <button onclick="doAccessRequest()" style="width:100%; padding:12px; background:#2E5E5A; color:white; border:none; border-radius:8px; font-weight:600; cursor:pointer; font-size:14px; transition:background 0.3s;">ສົ່ງຄຳຂໍ</button>
+    <button id="requestSubmitBtn" onclick="doAccessRequest()" style="width:100%; padding:12px; background:#2E5E5A; color:white; border:none; border-radius:8px; font-weight:600; cursor:pointer; font-size:14px; transition:background 0.3s;">ສົ່ງຄຳຂໍ</button>
     <p style="margin:12px 0 0; font-size:12px; color:#999; text-align:center;">ຄຳຂໍຂອງທ່ານຈະຖືກສົ່ງໄປຫາ Admin ເພື່ອກວດສອບ</p>
   </div>
   
