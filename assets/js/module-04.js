@@ -89,7 +89,7 @@ async function renderSearch(force) {
 
   // ຖ້າຫ້ອງປ່ຽນ ຫຼື ຍັງບໍ່ມີຂໍ້ມູນໃນ Cache, ໃຫ້ໂຫຼດລາຍຊື່ທັງໝົດມາໄວ້ກ່ອນ
   if (!fullRosterCache[room] || force) {
-    list.innerHTML = '<div class="empty">ກຳລັງໂຫຼດລາຍຊື່ທັງໝົດໃນຫ້ອງ…</div>';
+    list.innerHTML = '<div class="empty kct-loading">ກຳລັງໂຫຼດລາຍຊື່ທັງໝົດໃນຫ້ອງ…</div>';
     const res = await callAPI('getRosterDirectory', { room: room });
     if (!res || res.error) { list.innerHTML = '<div class="empty">ບໍ່ສາມາດໂຫຼດຂໍ້ມູນໄດ້</div>'; return; }
     fullRosterCache[room] = res.students || [];
@@ -122,7 +122,7 @@ async function renderSearch(force) {
 }
 
 async function renderRooms() {
-  const list = document.getElementById('roomsList'); list.innerHTML = '<div class="empty">ກຳລັງໂຫຼດຫ້ອງ…</div>';
+  const list = document.getElementById('roomsList'); list.innerHTML = '<div class="empty kct-loading">ກຳລັງໂຫຼດຫ້ອງ…</div>';
   const results = await Promise.all(legacyRooms.map(async function(room) { return [room, await callAPI('getRosterDirectory', { room: room, nameQuery: '', idQuery: '', parentQuery: '' })]; }));
   list.innerHTML = results.map(function(pair) {
     const room = pair[0], res = pair[1], total = res && !res.error ? (res.totalInRoom || 0) : 0;
@@ -189,4 +189,16 @@ function applyRoleRestrictions() { return; }
 async function loadConfig() { return; }
 async function fetchRosterFromSheet() { return; }
 async function submitAccessRequest(name, room) { return callAPI('requestAccess', { name: name, room: room }); }
-function doAccessRequest() { const name = (document.getElementById('nameReqInput') || {}).value || ''; const room = (document.getElementById('roomReqInput') || {}).value || ''; if (!name.trim() || !room.trim()) return alert('ກະລຸນາໃສ່ຊື່–ນາມສະກຸນ ແລະ ຫ້ອງ'); submitAccessRequest(name.trim(), room.trim()).then(function(res) { if (res && !res.error) { showPendingApprovalState(); startPollingApprovalStatus(); } else alert('ສົ່ງຄຳຂໍບໍ່ສຳເລັດ: ' + (res && res.error ? res.error : 'ERROR')); }); }
+function doAccessRequest() {
+  const name = (document.getElementById('nameReqInput') || {}).value || '';
+  const room = (document.getElementById('roomReqInput') || {}).value || '';
+  if (!name.trim() || !room.trim()) return alert('ກະລຸນາໃສ່ຊື່–ນາມສະກຸນ ແລະ ຫ້ອງ');
+  const btn = document.getElementById('requestSubmitBtn');
+  if (btn && btn.disabled) return;
+  const label = btn ? btn.textContent : '';
+  if (btn) { btn.disabled = true; btn.innerHTML = '<span class="kct-spin" style="border-color:rgba(255,255,255,.35);border-top-color:#fff;"></span> ກຳລັງສົ່ງຄຳຂໍ…'; }
+  submitAccessRequest(name.trim(), room.trim()).then(function(res) {
+    if (res && !res.error) { showPendingApprovalState(); startPollingApprovalStatus(); }
+    else alert('ສົ່ງຄຳຂໍບໍ່ສຳເລັດ: ' + (res && res.error ? res.error : 'ERROR'));
+  }).finally(function() { if (btn) { btn.disabled = false; btn.textContent = label; } });
+}
