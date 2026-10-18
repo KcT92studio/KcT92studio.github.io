@@ -21,33 +21,6 @@ let currentUser = null;
 let currentIdToken = null; // raw Google ID token (JWT) — sent with every privileged request so Apps Script can verify identity itself
 let pollingInterval = null;
 
-async function init() {
-  await loadConfig();
-  if (sheetConfig.rosterSheetId) {
-    await fetchRosterFromSheet(sheetConfig.rosterSheetId);
-  }
-  applyRoleRestrictions();
-  renderSearch();
-}
-
-function onLoginSuccessFromAuth(access) {
-  currentAccess = access;
-  const userBadge = document.getElementById('userBadge');
-  if (userBadge) {
-    userBadge.textContent = `👤 ${access.role}${access.room ? ' | ຫ້ອງ ' + access.room : ''}`;
-  }
-  init();
-  if (typeof loadNews === 'function') loadNews(); // refresh news so ✏️/🗑️ show for teacher/admin
-  if (typeof loadApps === 'function') loadApps(); // refresh apps so ✏️/🗑️ show for teacher/admin
-  if (typeof loadBooks === 'function') loadBooks(); // refresh books so ✏️/🗑️ show for admin
-
-  // ຈື່ການລ໋ອກອິນໄວ້ໃນເຄື່ອງ — ຈະບໍ່ຫລຸດອອກລະບົບທຸກຄັ້ງທີ່ Refresh (token ຈະໝົດອາຍຸເອງໃນ ~1 ຊົ່ວໂມງ ຕາມມາດຕະຖານ Google)
-  if (currentIdToken) {
-    try { localStorage.setItem('kct_id_token', currentIdToken); } catch (e) {}
-  }
-  updateHeaderAuthUI(true, currentUser ? currentUser.name : access.role);
-}
-
 function updateHeaderAuthUI(loggedIn, label) {
   const loginBtn = document.getElementById('headerLoginBtn');
   const chip = document.getElementById('headerUserChip');
@@ -61,31 +34,6 @@ function updateHeaderAuthUI(loggedIn, label) {
     loginBtn.style.display = 'inline-flex';
     chip.style.display = 'none';
   }
-}
-
-function logoutUser() {
-  currentAccess = null;
-  currentUser = null;
-  currentIdToken = null;
-  try { localStorage.removeItem('kct_id_token'); } catch (e) {}
-
-  updateHeaderAuthUI(false);
-  closeApp(); // ປິດໜ້າຕ່າງລະບົບຄະແນນ ຖ້າເປີດຢູ່
-  // ກັບຄືນ loginGate ໃຫ້ພ້ອມໃຫ້ Login ໃໝ່ໃນຄັ້ງຕໍ່ໄປ
-  const loginGate = document.getElementById('loginGate');
-  const mainApp = document.getElementById('mainApp');
-  if (loginGate) loginGate.style.display = 'block';
-  if (mainApp) mainApp.style.display = 'none';
-  const loginStep = document.getElementById('loginStep');
-  const requestStep = document.getElementById('requestStep');
-  const pendingStep = document.getElementById('pendingStep');
-  if (loginStep) loginStep.style.display = 'block';
-  if (requestStep) requestStep.style.display = 'none';
-  if (pendingStep) pendingStep.style.display = 'none';
-
-  if (typeof loadNews === 'function') loadNews();
-  if (typeof loadApps === 'function') loadApps();
-  if (typeof loadBooks === 'function') loadBooks();
 }
 
 async function restoreLoginFromStorage() {
@@ -122,158 +70,7 @@ async function restoreLoginFromStorage() {
   }
 }
 
-function applyRoleRestrictions() {
-  if (!currentAccess) return;
-  const gearBtn = document.getElementById('gearBtn');
-  if (gearBtn) {
-    const isAdmin = currentAccess.role && currentAccess.role.toLowerCase() === 'admin';
-    gearBtn.style.display = isAdmin ? 'block' : 'none';
-  }
-  if (currentAccess.role && currentAccess.role.toLowerCase() === 'student' && currentAccess.room) {
-    students = students.filter(s => s.room === currentAccess.room);
-  }
-}
-
-function canEditRoom(room) {
-  if (!currentAccess) return false;
-  const role = (currentAccess.role || '').toLowerCase();
-  if (role === 'admin') return true;
-  if (role === 'teacher' && currentAccess.room && room && currentAccess.room.trim() === room.trim()) return true;
-  return false;
-}
-
-async function loadConfig() {
-  try {
-    const s1 = localStorage.getItem('sheetConfig');
-    if (s1) sheetConfig = JSON.parse(s1);
-    const s2 = localStorage.getItem('settingsConfig');
-    if (s2) settingsConfig = JSON.parse(s2);
-  } catch(e) {}
-  if (!sheetConfig.scoreSheetsByRoom) sheetConfig.scoreSheetsByRoom = {};
-}
-
-async function fetchRosterFromSheet(rosterId) { return; }
-
-function buildStudentsFromRows(rows) {
-  if (rows.length < 1) return { error: 'ບໍ່ພົບຂໍ້ມູນ' };
-  let extractedHeaderRoom = '';
-  for (let i = 0; i < Math.min(rows.length, 5); i++) {
-    const rowStr = (rows[i] || []).join(' ');
-    const match = rowStr.match(/ຊັ້ນຮຽນ\s*:\s*([^\s,]+)/i) || rowStr.match(/(ມ\.\s*\d+(\/\d+)?)/i);
-    if (match) { extractedHeaderRoom = (match[1] || match[2]).trim(); break; }
-  }
-  let fallbackRoom = extractedHeaderRoom || (Object.keys(sheetConfig.scoreSheetsByRoom)[0]) || 'ມ.4';
-  const newStudents = [];
-  let startIdx = 1;
-  for (let i = 0; i < Math.min(rows.length, 10); i++) {
-    const rStr = (rows[i] || []).join(' ');
-    if (rStr.includes('ຊື່') || rStr.includes('ນາມສະກຸນ') || rStr.includes('ລຳດັບ')) { startIdx = i + 1; break; }
-  }
-  for (let i = startIdx; i < rows.length; i++) {
-    const r = rows[i];
-    if (!r || r.length < 2) continue;
-    const col1 = (r[1] || '').trim();
-    if (!col1 || col1.includes('ຊື່') || col1.includes('ລຳດັບ')) continue;
-    newStudents.push({
-      firstName: col1, lastName: (r[2] || '').trim(), gender: (r[3] || '').trim(),
-      id: (r[4] || '').trim(), room: (r[5] || '').trim() || fallbackRoom,
-      dob: (r[6] || '').trim(), father: (r[7] || '').trim(), mother: (r[8] || '').trim(),
-      phone: (r[9] || '').trim(), address: (r[10] || '').trim(), rowIdx: i
-    });
-  }
-  return { students: newStudents };
-}
-
-function getScoreSheetId(room) { return ''; }
-
-function switchTab(tab) {
-  currentTab = tab;
-  document.getElementById('tabSearch').classList.toggle('active', tab === 'search');
-  document.getElementById('tabRooms').classList.toggle('active', tab === 'rooms');
-  document.getElementById('searchPanel').style.display = tab === 'search' ? 'block' : 'none';
-  document.getElementById('roomsPanel').style.display = tab === 'rooms' ? 'block' : 'none';
-  if (tab === 'rooms') renderRooms();
-}
-
-function formatStudentName(s) {
-  if (!s) return '';
-  const firstName = (s.firstName || '').trim();
-  const lastName = (s.lastName || '').trim();
-  const isBoy = s.gender ? s.gender.includes('ຊາຍ') : false;
-  const prefixRegex = /^(ທ້າວ|ນາງ|ນ\.|ທ\.|ດ\.ຊ\.|ດ\.ຍ\.|ນ\s|ທ\s|ດຊ|ດຍ)/i;
-  let formattedFirstName = firstName;
-  if (!prefixRegex.test(firstName)) {
-    const prefix = isBoy ? 'ທ້າວ' : 'ນາງ';
-    formattedFirstName = `${prefix} ${firstName}`;
-  }
-  return (formattedFirstName + ' ' + lastName).trim();
-}
-
-function renderSearch() {
-  const nQ = document.getElementById('nameInput').value.toLowerCase().trim();
-  const idQ = document.getElementById('idInput').value.toLowerCase().trim();
-  const pQ = document.getElementById('parentInput').value.toLowerCase().trim();
-  const listEl = document.getElementById('searchList');
-  if (!nQ && !idQ && !pQ) {
-    document.getElementById('roomCountSearch').textContent = '0';
-    document.getElementById('studentCountSearch').textContent = '0';
-    listEl.innerHTML = '<div class="empty">🔍 ກະລຸນາພິມຄຳຄົ້ນຫາ (ຊື່, ລະຫັດ, ຫຼື ຊື່ຜູ້ປົກຄອງ) ເພື່ອສະແດງຂໍ້ມູນ</div>';
-    return;
-  }
-  const filtered = students.filter(s => 
-    (s.firstName + ' ' + s.lastName).toLowerCase().includes(nQ) &&
-    (s.id||'').toLowerCase().includes(idQ) &&
-    ((s.father||'') + ' ' + (s.mother||'')).toLowerCase().includes(pQ)
-  );
-  document.getElementById('roomCountSearch').textContent = new Set(filtered.map(s => s.room)).size;
-  document.getElementById('studentCountSearch').textContent = filtered.length;
-  if (filtered.length === 0) { listEl.innerHTML = '<div class="empty">ບໍ່ພົບຂໍ້ມູນ</div>'; return; }
-  listEl.innerHTML = filtered.map((s, idx) => `
-    <div class="card" onclick="showDetail(${students.indexOf(s)})">
-      <div class="gender-badge ${s.gender && s.gender.includes('ຊາຍ') ? 'boy' : 'girl'}">${s.gender && s.gender.includes('ຊາຍ') ? '♂' : '♀'}</div>
-      <div>
-        <div class="card-name">${formatStudentName(s)}</div>
-        <div class="card-meta">${s.room || '-'} · ${s.id || '-'}</div>
-      </div>
-    </div>
-  `).join('');
-}
-
-function renderRooms() {
-  const rooms = {};
-  students.forEach(s => {
-    const r = s.room || 'ບໍ່ລະບຸຫ້ອງ';
-    if (!rooms[r]) rooms[r] = { total: 0 };
-    rooms[r].total++;
-  });
-  const listEl = document.getElementById('roomsList');
-  listEl.innerHTML = Object.keys(rooms).sort().map(r => `
-    <div class="room-card" onclick="showRoomScores('${r}')">
-      <div class="room-top">
-        <div class="room-name">ຫ້ອງ ${r}</div>
-        <button class="dl-btn small">📊 ເບິ່ງຄະແນນຫ້ອງ</button>
-      </div>
-      <div class="room-stats">
-        <div class="stat-item"><span class="dot total"></span>ທັງໝົດ <span class="stat-num">${rooms[r].total}</span></div>
-      </div>
-    </div>
-  `).join('');
-}
-
-async function showRoomScores(room) { return; }
-
-async function showDetail(idx) { return; }
-
-async function fetchStudentScores(s) { return; }
-
 function closeDetail() { document.getElementById('detailOverlay').innerHTML = ''; }
-function closeSettings() { document.getElementById('settingsOverlay').innerHTML = ''; }
-function extractSheetId(val) { return ''; }
-function openSettings() { return; }
-function renderScoreSheetRows() { return; }
-function addScoreSheetRow() { return; }
-async function saveSettings() { return; }
-
 // ORIGINAL GOOGLE LOGIN LOGIC
 function initGoogleLogin(buttonElementId) {
   try {
@@ -301,7 +98,7 @@ function handleGoogleLogin(response) {
     currentIdToken = response.credential; // ເກັບ token ດິບໄວ້ ສົ່ງໄປໃຫ້ Apps Script ຢືນຢັນເອງທຸກຄັ້ງ
     const payload = JSON.parse(base64UrlDecode(response.credential.split('.')[1]));
     currentUser = { email: payload.email, name: payload.name }; // ໃຊ້ສະແດງຜົນໃນໜ້າເວັບເທົ່ານັ້ນ — ບໍ່ໄດ້ໃຊ້ຢືນຢັນສິດອີກຕໍ່ໄປ
-    clearApiCache();
+    apiCache_.clear(); // ລ້າງສະເພາະຂໍ້ມູນສ່ວນຕົວ (ຂ່າວ/ແອັບ/ປຶ້ມ ທີ່ເປັນສາທາລະນະຍັງໃຊ້ຕໍ່ໄດ້)
     setLoginBusy(true, 'ກຳລັງກວດສອບບັນຊີ…');
     try { prefetchForRole_(localStorage.getItem('kct_role')); } catch (e) {}
     checkMyAccess();
@@ -324,17 +121,10 @@ async function checkMyAccess() {
   else { stopPollingApprovalStatus(); onLoginSuccess(res); }
 }
 
-async function submitAccessRequest(room) {
-  const res = await callAPI('requestAccess', { email: currentUser.email, name: currentUser.name, room: room });
-  if (res.error) { alert('❌ เกิดข้อผิดพลาด: ' + res.error); return; }
-  showPendingApprovalState();
-  startPollingApprovalStatus();
-}
-
 /* ===== ຊັ້ນ API: cache + ກັນເອີ້ນຊ້ຳ + ໂຕບອກສະຖານະກຳລັງໂຫຼດ ===== */
 const API_CACHE_TTL_ = { getNews: 60e3, getApps: 60e3, getBooks: 60e3, getAccessibleRooms: 300e3, getMyMonths: 300e3, getMyStudentProfile: 300e3, getMyClassMonth: 120e3, getMyReport: 120e3, getClassMonths: 300e3, getClassScores: 120e3, getRosterDirectory: 120e3, getRosterStudentReport: 120e3 };
 const apiCache_ = new Map();
-function clearApiCache() { apiCache_.clear(); }
+function clearApiCache() { apiCache_.clear(); publicBundleP_ = null; }
 
 let apiPending_ = 0, apiBarTimer_ = null, apiToastTimer_ = null, apiSlowTimer_ = null, apiBarPct_ = 0;
 function apiBusyUI_(on) {
@@ -356,7 +146,7 @@ function apiBusyUI_(on) {
 async function callAPIRaw_(action, data) {
   apiPending_++; if (apiPending_ === 1) apiBusyUI_(true);
   try {
-    const retryable = action === 'login' || !!API_CACHE_TTL_[action];
+    const retryable = action === 'login' || action === 'getPublicContent' || !!API_CACHE_TTL_[action];
     for (let attempt = 0; attempt < (retryable ? 2 : 1); attempt++) {
       const ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
       const timer = ctrl ? setTimeout(function () { ctrl.abort(); }, 45000) : null;
@@ -373,10 +163,44 @@ async function callAPIRaw_(action, data) {
   } finally { apiPending_--; if (apiPending_ === 0) apiBusyUI_(false); }
 }
 
+function seedApiCache_(boot) {
+  if (!Array.isArray(boot)) return;
+  boot.forEach(function (item) {
+    if (item && item.a && item.r && !item.r.error) apiCache_.set(item.a + '|' + JSON.stringify(item.d || {}), { t: Date.now(), v: item.r });
+  });
+}
+
+/* ຂ່າວ + ແອັບ + ປຶ້ມ ໂຫຼດພ້ອມກັນໃນການເອີ້ນເຊີບເວີຄັ້ງດຽວ (getPublicContent). ຖ້າເຊີບເວີຍັງເປັນໂຄດເກົ່າ ຈະກັບໄປເອີ້ນແຍກ 3 ຄັ້ງຄືເກົ່າອັດຕະໂນມັດ */
+const PUBLIC_BUNDLE_KEYS_ = { getNews: 'news', getApps: 'apps', getBooks: 'books' };
+let publicBundleP_ = null, publicBundleSupported_ = true;
+function publicBundle_() {
+  if (!publicBundleP_) {
+    const p = callAPIRaw_('getPublicContent', {}).then(function (r) {
+      if (!r || r.error) { publicBundleSupported_ = !(r && r.error === 'UNKNOWN_ACTION') && publicBundleSupported_; if (publicBundleP_ === p) publicBundleP_ = null; return null; }
+      setTimeout(function () { if (publicBundleP_ === p) publicBundleP_ = null; }, 60000);
+      return r;
+    });
+    publicBundleP_ = p;
+  }
+  return publicBundleP_;
+}
+
 function callAPI(action, data) {
+  if (action === 'login') {
+    return callAPIRaw_(action, data).then(function (res) {
+      if (res && res.boot) { seedApiCache_(res.boot); delete res.boot; try { localStorage.setItem('kct_boot', '1'); } catch (e) {} }
+      return res;
+    });
+  }
   const ttl = API_CACHE_TTL_[action];
   if (/^(add|update|delete|upload)/.test(action)) clearApiCache();
   if (action === 'getMyReport' || action === 'getRosterStudentReport' || action === 'getMyClassMonth' || action === 'getClassScores') ensureExportLibs();
+  if (PUBLIC_BUNDLE_KEYS_[action] && publicBundleSupported_) {
+    return publicBundle_().then(function (r) {
+      if (r) { const o = {}; o[PUBLIC_BUNDLE_KEYS_[action]] = r[PUBLIC_BUNDLE_KEYS_[action]] || []; return o; }
+      return callAPIRaw_(action, data); // ສຳຮອງ: ເອີ້ນແຍກແບບເກົ່າ
+    });
+  }
   if (!ttl) return callAPIRaw_(action, data);
   const key = action + '|' + JSON.stringify(data || {});
   const hit = apiCache_.get(key);
@@ -417,6 +241,7 @@ function setLoginBusy(on, text) {
 }
 
 function prefetchForRole_(role) {
+  try { if (localStorage.getItem('kct_boot') === '1') return; } catch (e) {} // ເຊີບເວີຮວມຂໍ້ມູນມາກັບ login ແລ້ວ ບໍ່ຕ້ອງເອີ້ນຊ້ຳ
   role = String(role || '').toLowerCase();
   if (role === 'student') { callAPI('getMyMonths', {}); callAPI('getMyStudentProfile', {}); }
   else if (role === 'admin' || role === 'teacher' || role === 'teacher_viewer') callAPI('getAccessibleRooms', {});
@@ -452,12 +277,6 @@ function onLoginSuccess(access) {
   onLoginSuccessFromAuth(access);
 }
 
-function doAccessRequest() {
-  const room = document.getElementById('roomReqInput').value.trim();
-  if (!room) { alert('ກະລຸນາໃສ່ຫ້ອງ'); return; }
-  submitAccessRequest(room);
-}
-
 (function waitForGoogleAndInit() {
   const btn = document.getElementById('google-login-btn');
   if (!btn) { setTimeout(waitForGoogleAndInit, 150); return; }
@@ -472,14 +291,31 @@ function doAccessRequest() {
   }
 })();
 
-function downloadExcel(idx) {
-  const table = document.getElementById('scoreTable');
-  const wb = XLSX.utils.table_to_book(table);
-  XLSX.writeFile(wb, `ປຶ້ມຕິດຕາມ_${students[idx].firstName}.xlsx`);
-}
-
-function downloadPDF(filename) {
-  const element = document.getElementById('reportCardContent');
-  const opt = { margin: 0.5, filename: filename + '.pdf', image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' } };
-  html2pdf().set(opt).from(element).save();
-}
+/* =====================================================================
+   ແຈ້ງເຕືອນ: ເປີດ "ໂໝດຄອມພິວເຕີ (Desktop site)" ໃນໂທລະສັບ
+   ===================================================================== */
+(function desktopModeHint() {
+  function isDesktopModeOnPhone() {
+    const touch = (navigator.maxTouchPoints || 0) > 0;
+    const smallScreen = Math.min(screen.width, screen.height) <= 600; // ຂະໜາດຈໍແທ້ຂອງໂທລະສັບ (CSS px)
+    return touch && smallScreen && window.innerWidth >= 760;           // ແຕ່ໜ້າເວັບກວ້າງແບບຄອມ
+  }
+  function closedBefore() { try { return sessionStorage.getItem('kct_dm_closed') === '1'; } catch (e) { return false; } }
+  function show() {
+    if (document.getElementById('kctDesktopHint')) return;
+    const k = Math.max(1.4, Math.min(3.2, window.innerWidth / Math.min(screen.width, screen.height))); // ຂະຫຍາຍຕົວໜັງສືໃຫ້ອ່ານງ່າຍເຖິງຈະຢູ່ໂໝດຄອມ
+    const box = document.createElement('div');
+    box.id = 'kctDesktopHint'; box.setAttribute('role', 'dialog'); box.setAttribute('aria-label', 'ຄຳແນະນຳເປີດໂໝດໂທລະສັບ');
+    box.style.cssText = 'position:fixed;left:0;right:0;bottom:0;z-index:2147483600;background:#fffbea;border-top:' + (3 * k) + 'px solid #B8603F;box-shadow:0 -6px 24px rgba(0,0,0,.25);padding:' + (12 * k) + 'px ' + (14 * k) + 'px ' + (14 * k) + 'px;font-family:"Noto Sans Lao",sans-serif;color:#2A2420;font-size:' + (14 * k) + 'px;line-height:1.5;box-sizing:border-box;';
+    box.innerHTML = '<button id="kctDesktopHintClose" aria-label="ປິດ" style="position:absolute;top:' + (6 * k) + 'px;right:' + (8 * k) + 'px;width:' + (40 * k) + 'px;height:' + (40 * k) + 'px;border-radius:50%;border:2px solid #2A2420;background:#fff;color:#2A2420;font-size:' + (26 * k) + 'px;font-weight:700;line-height:1;cursor:pointer;padding:0;">✕</button>'
+      + '<div style="font-weight:700;font-size:' + (16 * k) + 'px;padding-right:' + (50 * k) + 'px;">📱 ກຳລັງເປີດແບບ "ໂໝດຄອມພິວເຕີ"</div>'
+      + '<div style="margin-top:' + (4 * k) + 'px;">ໜ້າເວັບຈຶ່ງນ້ອຍ ແລະ ອ່ານຍາກ. ປິດໂໝດນີ້ເພື່ອໃຫ້ໃຫຍ່ ແລະ ເບິ່ງງ່າຍຂຶ້ນ:</div>'
+      + '<div style="margin-top:' + (6 * k) + 'px;"><b>Chrome / Android:</b> ກົດ <b>⋮</b> (ສາມຈຸດ) → <b>ເອົາຕິກອອກ</b> ຢູ່ "ເວັບໄຊສຳລັບຄອມພິວເຕີ" (Desktop site)</div>'
+      + '<div style="margin-top:' + (4 * k) + 'px;"><b>iPhone / Safari:</b> ກົດ <b>ᴀA</b> ຂ້າງແຖບທີ່ຢູ່ → <b>ຮ້ອງຂໍເວັບໄຊສຳລັບມືຖື</b> (Request Mobile Website)</div>'
+      + '<div style="margin-top:' + (4 * k) + 'px;color:#6b6259;font-size:' + (12 * k) + 'px;">ຖ້າເປີດຜ່ານແອັບ Facebook/Messenger ໃຫ້ເລືອກ "ເປີດໃນ Chrome/Safari" ແລ້ວປິດໂໝດຄອມຕາມຂ້າງເທິງ.</div>';
+    document.body.appendChild(box);
+    document.getElementById('kctDesktopHintClose').addEventListener('click', function () { box.remove(); try { sessionStorage.setItem('kct_dm_closed', '1'); } catch (e) {} });
+  }
+  function check() { if (!closedBefore() && isDesktopModeOnPhone()) show(); }
+  if (document.readyState === 'complete') setTimeout(check, 600); else window.addEventListener('load', function () { setTimeout(check, 600); });
+})();

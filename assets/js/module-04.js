@@ -33,11 +33,10 @@ const REPORT_SUBJECTS = [
   { group: 'ສະຖິຕິ', subject: 'ຈັດທີ' }
 ];
 
+function kctSkeletonCards(n) { let h = ''; for (let i = 0; i < n; i++) h += '<div class="card kct-skel"><div class="gender-badge" style="background:#e6dfd0"></div><div style="flex:1"><div class="kct-skel-line" style="width:62%"></div><div class="kct-skel-line" style="width:30%;height:10px;margin-top:8px"></div></div></div>'; return h; }
 function legacyEscape(value) { const node = document.createElement('div'); node.textContent = value == null ? '' : String(value); return node.innerHTML; }
-function legacyText(value) { return value == null || value === '' ? '-' : String(value); }
 function legacyRole() { return String((currentAccess && currentAccess.role) || '').toLowerCase(); }
 function legacyCanBrowse() { return ['admin', 'teacher', 'teacher_viewer'].includes(legacyRole()); }
-function legacyCanEdit() { return ['admin', 'teacher'].includes(legacyRole()); }
 function legacyDisplayName(student) {
   const first = String(student.firstName || '').trim(); const last = String(student.lastName || '').trim();
   const hasPrefix = /^(ທ້າວ|ນາງ|ນ\.|ທ\.|ດ\.ຊ\.|ດ\.ຍ\.)/i.test(first);
@@ -47,6 +46,7 @@ function legacyDisplayName(student) {
 
 async function init() {
   if (!currentAccess) return;
+  if (typeof kctUpdateScoreTabLabel === 'function') kctUpdateScoreTabLabel();
   const source = document.getElementById('dataSourceText');
   if (legacyCanBrowse()) {
     if (source) source.textContent = 'ຄົ້ນຫາຂໍ້ມູນນັກຮຽນຕາມສິດທີ່ໄດ້ຮັບ';
@@ -64,6 +64,7 @@ async function legacyLoadRooms() {
   const res = await callAPI('getAccessibleRooms', {});
   if (!res || res.error || !Array.isArray(res.rooms)) { document.getElementById('searchList').innerHTML = '<div class="empty">ບໍ່ສາມາດໂຫຼດຫ້ອງຮຽນໄດ້</div>'; return; }
   legacyRooms = res.rooms.filter(Boolean);
+  if (typeof kctUpdateScoreTabLabel === 'function') kctUpdateScoreTabLabel();
   const select = document.getElementById('legacyRoomSelect');
   if (select) {
     select.replaceChildren();
@@ -75,6 +76,40 @@ async function legacyLoadRooms() {
 }
 
 function legacySelectedRoom() { const select = document.getElementById('legacyRoomSelect'); return select && select.value ? select.value : (legacyRooms[0] || ''); }
+
+/* ===== ຄົ້ນຫາຊື່ແບບລາວ =====
+   - ບໍ່ສົນວັນນະຍຸດ (່ ້ ໊ ໋) ແລະ ຊ່ອງວ່າງ
+   - ພະຍັນຊະນະຕົ້ນ: ພິມ "ສ" ຕ້ອງພົບ ສົມ..., ເສີນ..., ແສງ..., ໂສ... (ຂ້າມສະຫຼະນຳໜ້າ ເ ແ ໂ ໄ ໃ)
+   - ພິມສະຫຼະນຳໜ້າມາດ້ວຍ ເຊັ່ນ "ເສ" ກໍພົບ ເສີນ... (ແລະບໍ່ປົນກັບ ແສ...)
+   - ຄຳຄົ້ນສັ້ນ (1–2 ໂຕ) ກົງຫົວຄຳເທົ່ານັ້ນ, ຄຳຍາວ (3 ໂຕຂຶ້ນໄປ) ຄົ້ນກາງຄຳໄດ້ */
+function laoStripTitle(first) { return String(first || '').replace(/^\s*(ທ້າວ|ນາງ|ເດັກຊາຍ|ເດັກຍິງ|ນ\.|ທ\.|ດ\.ຊ\.|ດ\.ຍ\.)\s*/, ''); }
+function laoClean(v) { return String(v || '').toLowerCase().replace(/[\u0EC8-\u0ECC]/g, ''); }
+function laoWords(v) { return laoClean(v).split(/[\s.,\-_/()]+/).filter(Boolean); }
+function laoCore(w) { return w.replace(/^[ເແໂໄໃ]+/, ''); }
+function laoMatcher(query) {
+  const tokens = laoWords(query);
+  if (!tokens.length) return function () { return 0; };
+  return function (text, firstName) {
+    const words = laoWords(text);
+    const cores = words.map(laoCore);
+    const concat = cores.join('');
+    const firstWords = laoWords(firstName);
+    let rank = 2;
+    for (let i = 0; i < tokens.length; i++) {
+      const q = tokens[i], qCore = laoCore(q), hasLead = q !== qCore;
+      if (!qCore) { // ພິມສະຫຼະນຳໜ້າຢ່າງດຽວ: ເອົາຄຳທີ່ຂຶ້ນຕົ້ນດ້ວຍສະຫຼະນັ້ນ
+        if (!words.some(function (w) { return w.charAt(0) === q.charAt(0); })) return -1;
+        continue;
+      }
+      const prefixOk = words.some(function (w, k) { return hasLead ? w.indexOf(q) === 0 : cores[k].indexOf(qCore) === 0; });
+      const innerOk = !prefixOk && qCore.length >= 3 && (hasLead ? words.some(function (w) { return w.indexOf(q) >= 0; }) : concat.indexOf(qCore) >= 0);
+      if (!prefixOk && !innerOk) return -1;
+      if (i === 0 && prefixOk && firstWords.some(function (w) { return hasLead ? w.indexOf(q) === 0 : laoCore(w).indexOf(qCore) === 0; })) rank = 0;
+      else if (i === 0 && prefixOk && rank > 1) rank = 1;
+    }
+    return rank;
+  };
+}
 
 let fullRosterCache = {}; // Cache ລາຍຊື່ທັງໝົດແຍກຕາມຫ້ອງ
 
@@ -89,7 +124,7 @@ async function renderSearch(force) {
 
   // ຖ້າຫ້ອງປ່ຽນ ຫຼື ຍັງບໍ່ມີຂໍ້ມູນໃນ Cache, ໃຫ້ໂຫຼດລາຍຊື່ທັງໝົດມາໄວ້ກ່ອນ
   if (!fullRosterCache[room] || force) {
-    list.innerHTML = '<div class="empty kct-loading">ກຳລັງໂຫຼດລາຍຊື່ທັງໝົດໃນຫ້ອງ…</div>';
+    list.innerHTML = kctSkeletonCards(6) + '<div class="empty kct-loading" style="padding-top:6px">ກຳລັງໂຫຼດລາຍຊື່ນັກຮຽນ…</div>';
     const res = await callAPI('getRosterDirectory', { room: room });
     if (!res || res.error) { list.innerHTML = '<div class="empty">ບໍ່ສາມາດໂຫຼດຂໍ້ມູນໄດ້</div>'; return; }
     fullRosterCache[room] = res.students || [];
@@ -97,25 +132,30 @@ async function renderSearch(force) {
 
   const students = fullRosterCache[room];
   
-  // ກັ່ນຕອງຂໍ້ມູນໃນ Browser ທັນທີ (Smart Search)
+  // ກັ່ນຕອງຂໍ້ມູນໃນ Browser ທັນທີ (Smart Search ແບບລາວ: ຮອງຮັບສະຫຼະນຳໜ້າ ເ ແ ໂ ໄ ໃ)
   const searchKey = (val) => String(val || '').toLowerCase().replace(/[\s\.,\-_/()]+/g, '');
-  const nQ = searchKey(nameQuery), iQ = searchKey(idQuery), pQ = searchKey(parentQuery);
-  
-  const filtered = students.filter(s => {
-    return (!nQ || searchKey(s.firstName + ' ' + s.lastName).indexOf(nQ) >= 0) &&
-           (!iQ || searchKey(s.studentId).indexOf(iQ) >= 0) &&
-           (!pQ || searchKey(s.father + ' ' + s.mother).indexOf(pQ) >= 0);
-  });
+  const iQ = searchKey(idQuery);
+  const nameMatcher = laoMatcher(nameQuery), parentMatcher = laoMatcher(parentQuery);
+  const filtered = students.map(function(s, idx) {
+    const first = laoStripTitle(s.firstName), last = String(s.lastName || '');
+    const nm = nameMatcher(first + ' ' + last, first);
+    if (nm < 0) return null;
+    if (iQ && searchKey(s.studentId).indexOf(iQ) < 0) return null;
+    if (parentQuery && parentMatcher(String(s.father || '') + ' ' + String(s.mother || ''), '') < 0) return null;
+    return { s: s, rank: nm, idx: idx };
+  }).filter(Boolean);
+  if (nameQuery) filtered.sort(function(a, b) { return a.rank - b.rank || a.idx - b.idx; });
+  const filteredStudents = filtered.map(function(x) { return x.s; });
 
-  document.getElementById('roomCountSearch').textContent = filtered.length ? '1' : '0';
-  document.getElementById('studentCountSearch').textContent = filtered.length;
+  document.getElementById('roomCountSearch').textContent = filteredStudents.length ? '1' : '0';
+  document.getElementById('studentCountSearch').textContent = filteredStudents.length;
 
-  if (!filtered.length) {
+  if (!filteredStudents.length) {
     list.innerHTML = '<div class="empty">ບໍ່ພົບຂໍ້ມູນ</div>';
     return;
   }
 
-  list.innerHTML = filtered.map(function(student) {
+  list.innerHTML = filteredStudents.map(function(student) {
     const male = String(student.gender || '').toLowerCase().includes('ຊາຍ') || String(student.gender || '').toLowerCase() === 'male';
     return '<div class="card" onclick="showDetail(\'' + legacyEscape(student.ref) + '\')"><div class="gender-badge ' + (male ? 'boy' : 'girl') + '">' + (male ? '♂' : '♀') + '</div><div style="flex:1;"><div class="card-name">' + legacyEscape(legacyDisplayName(student)) + '</div><div class="card-meta">' + legacyEscape(student.room) + ' · ' + legacyEscape(student.studentId || '-') + '</div></div><button class="dl-btn small" onclick="event.stopPropagation();showDetail(\'' + legacyEscape(student.ref) + '\')">📘</button></div>';
   }).join('');
@@ -126,7 +166,7 @@ async function renderRooms() {
   const results = await Promise.all(legacyRooms.map(async function(room) { return [room, await callAPI('getRosterDirectory', { room: room, nameQuery: '', idQuery: '', parentQuery: '' })]; }));
   list.innerHTML = results.map(function(pair) {
     const room = pair[0], res = pair[1], total = res && !res.error ? (res.totalInRoom || 0) : 0;
-    return '<div class="room-card" onclick="showRoomScores(\'' + legacyEscape(room) + '\')"><div class="room-top"><div class="room-name">ຫ້ອງ ' + legacyEscape(room) + '</div><div style="display:flex;gap:5px;"><button class="dl-btn small" onclick="event.stopPropagation(); showRoomScores(\'' + legacyEscape(room) + '\')">👥</button><button class="dl-btn small" style="background:#167c45;" onclick="event.stopPropagation(); showClassScores(\'' + legacyEscape(room) + '\')">📊</button></div></div><div class="room-stats"><div class="stat-item"><span class="dot total"></span>ທັງໝົດ <span class="stat-num">' + total + '</span></div></div></div>';
+    return '<div class="room-card" onclick="teacherScoreOpen(\'' + legacyEscape(room) + '\')"><div class="room-top"><div class="room-name">ຫ້ອງ ' + legacyEscape(room) + '</div><div style="display:flex;gap:5px;"><button class="dl-btn small" onclick="event.stopPropagation(); showRoomScores(\'' + legacyEscape(room) + '\')">👥</button><button class="dl-btn small" style="background:#167c45;" onclick="event.stopPropagation(); teacherScoreOpen(\'' + legacyEscape(room) + '\')">📊 ເບິ່ງຄະແນນ</button></div></div><div class="room-stats"><div class="stat-item"><span class="dot total"></span>ທັງໝົດ <span class="stat-num">' + total + '</span></div></div></div>';
   }).join('');
 }
 
@@ -135,11 +175,37 @@ function showRoomScores(room) {
   switchTab('search'); renderSearch(true);
 }
 
+function legacyReportError(code) {
+  const map = {
+    REPORT_SELECTION_EXPIRED: 'ລາຍຊື່ໝົດອາຍຸ — ກະລຸນາກົດຄົ້ນຫາໃໝ່ແລ້ວລອງອີກຄັ້ງ',
+    REPORT_NOT_FOUND: 'ບໍ່ພົບແຖບປຶ້ມຕິດຕາມຂອງນັກຮຽນຄົນນີ້ໃນ Google Sheet (ຊື່ແຖບຕ້ອງກົງກັບຊື່ນັກຮຽນ)',
+    ROOM_NOT_CONFIGURED: 'ຫ້ອງນີ້ຍັງບໍ່ໄດ້ຕັ້ງຄ່າໄຟລ໌ຄະແນນ (Rooms_Secure)',
+    PROFILE_INCOMPLETE: 'ຂໍ້ມູນນັກຮຽນບໍ່ຄົບ (ຊື່ ຫຼື ຫ້ອງ)',
+    FORBIDDEN: 'ບໍ່ມີສິດເປີດຂໍ້ມູນນີ້',
+    UNAUTHENTICATED: 'ເຊສຊັນໝົດອາຍຸ — ກະລຸນາເຂົ້າສູ່ລະບົບໃໝ່',
+    REQUEST_FAILED: 'ເຊີບເວີຜິດພາດ ກະລຸນາລອງໃໝ່'
+  };
+  const c = String(code || 'ERROR'); const key = Object.keys(map).find(function(k) { return c.indexOf(k) === 0; });
+  return key ? map[key] + ' [' + c + ']' : c;
+}
+
 async function showDetail(ref) {
   const overlay = document.getElementById('detailOverlay');
-  overlay.innerHTML = '<div class="detail-overlay"><div class="detail-card"><div class="detail-header"><div class="detail-name">📊 ກຳລັງໂຫຼດປຶ້ມຕິດຕາມ…</div><button class="close-btn" onclick="closeDetail()">✕</button></div></div></div>';
-  const report = await callAPI('getRosterStudentReport', { ref: ref });
-  if (!report || report.error) { overlay.innerHTML = '<div class="detail-overlay"><div class="detail-card"><div class="detail-header"><div class="detail-name">📊 ປຶ້ມຕິດຕາມ</div><button class="close-btn" onclick="closeDetail()">✕</button></div><div class="empty">ບໍ່ສາມາດເປີດປຶ້ມຕິດຕາມ: ' + legacyEscape(report && report.error) + '</div></div></div>'; return; }
+  overlay.innerHTML = '<div class="detail-overlay"><div class="detail-card"><div class="detail-header"><div class="detail-name"><span class="kct-spin"></span> ກຳລັງໂຫຼດປຶ້ມຕິດຕາມ…</div><button class="close-btn" onclick="closeDetail()">✕</button></div></div></div>';
+  const room = legacySelectedRoom();
+  let report = await callAPI('getRosterStudentReport', { ref: ref, room: room });
+  if (report && report.error === 'REPORT_SELECTION_EXPIRED') {
+    // ລາຍຊື່ເກົ່າໝົດອາຍຸ: ໂຫຼດລາຍຊື່ໃໝ່ ແລ້ວຫານັກຮຽນຄົນເກົ່າດ້ວຍລະຫັດ+ຊື່ ແລະລອງອີກຄັ້ງອັດຕະໂນມັດ
+    const old = (fullRosterCache[room] || []).find(function(s) { return s.ref === ref; });
+    clearApiCache(); delete fullRosterCache[room];
+    const fresh = await callAPI('getRosterDirectory', { room: room });
+    if (fresh && !fresh.error) {
+      fullRosterCache[room] = fresh.students || [];
+      const again = old && fullRosterCache[room].find(function(s) { return s.studentId === old.studentId && s.firstName === old.firstName && s.lastName === old.lastName; });
+      if (again) report = await callAPI('getRosterStudentReport', { ref: again.ref, room: room });
+    }
+  }
+  if (!report || report.error) { overlay.innerHTML = '<div class="detail-overlay"><div class="detail-card"><div class="detail-header"><div class="detail-name">📊 ປຶ້ມຕິດຕາມ</div><button class="close-btn" onclick="closeDetail()">✕</button></div><div class="empty">ບໍ່ສາມາດເປີດປຶ້ມຕິດຕາມ: ' + legacyEscape(legacyReportError(report && report.error)) + '</div></div></div>'; return; }
   legacySelectedReport = report; legacyRenderReport(report, overlay);
 }
 
@@ -147,7 +213,7 @@ async function legacyShowMyReport() {
   const overlay = document.getElementById('detailOverlay');
   overlay.innerHTML = '<div class="detail-overlay"><div class="detail-card"><div class="detail-header"><div class="detail-name">📊 ກຳລັງໂຫຼດປຶ້ມຕິດຕາມ…</div></div></div></div>';
   const report = await callAPI('getMyReport', {});
-  if (!report || report.error) { overlay.innerHTML = '<div class="detail-overlay"><div class="detail-card"><div class="detail-name">ບໍ່ພົບປຶ້ມຕິດຕາມ: ' + legacyEscape(report && report.error) + '</div></div></div>'; return; }
+  if (!report || report.error) { overlay.innerHTML = '<div class="detail-overlay"><div class="detail-card"><div class="detail-name">ບໍ່ສາມາດເປີດປຶ້ມຕິດຕາມ: ' + legacyEscape(legacyReportError(report && report.error)) + '</div></div></div>'; return; }
   legacySelectedReport = report; legacyRenderReport(report, overlay);
 }
 
@@ -175,19 +241,14 @@ async function saveLegacyReportEdits() {
   if (!inputs.length) return alert('ບໍ່ມີຄະແນນທີ່ແກ້ໄຂ');
   if (!confirm('ຢືນຢັນບັນທຶກຄະແນນ ' + inputs.length + ' ລາຍການ?')) return;
   for (const input of inputs) {
-    const res = await callAPI('updateReportScore', { ref: report.ref, subjectIndex: Number(input.dataset.subject), columnIndex: Number(input.dataset.column), value: input.value.trim() });
-    if (!res || res.error) return alert('ບັນທຶກບໍ່ສຳເລັດ: ' + (res && res.error ? res.error : 'ERROR'));
+    const res = await callAPI('updateReportScore', { ref: report.ref, room: (report.student && report.student.room) || legacySelectedRoom(), subjectIndex: Number(input.dataset.subject), columnIndex: Number(input.dataset.column), value: input.value.trim() });
+    if (!res || res.error) return alert('ບັນທຶກບໍ່ສຳເລັດ: ' + legacyReportError(res && res.error));
     input.dataset.original = input.value.trim();
   }
   alert('ບັນທຶກຄະແນນສຳເລັດ');
 }
 
 function downloadExcel() { const table = document.getElementById('scoreTable'); if (!table || !window.XLSX) return; const workbook = XLSX.utils.table_to_book(table); XLSX.writeFile(workbook, 'ປຶ້ມຕິດຕາມ.xlsx'); }
-function openSettings() { return; }
-function closeSettings() { return; }
-function applyRoleRestrictions() { return; }
-async function loadConfig() { return; }
-async function fetchRosterFromSheet() { return; }
 async function submitAccessRequest(name, room) { return callAPI('requestAccess', { name: name, room: room }); }
 function doAccessRequest() {
   const name = (document.getElementById('nameReqInput') || {}).value || '';

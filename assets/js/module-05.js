@@ -91,10 +91,11 @@ async function studentMonthlyInit(){
   document.getElementById('studentMonthCards').innerHTML=studentMonthsCache.map(function(month){return '<button class="month-card" onclick="studentOpenMonth(\''+monthlyEsc(month)+'\')">📅 '+monthlyEsc(month)+'</button>';}).join('');
   if (studentMonthsCache.length) studentOpenMonth(studentMonthsCache[0]);
 }
-async function studentOpenMonth(month){
+async function studentOpenMonth(month){ return studentOpenMonthWith(month, function(m){ return callAPI('getMyClassMonth',{month:m}); }); }
+async function studentOpenMonthWith(month, fetcher){
   document.querySelectorAll('.month-card').forEach(function(button){button.classList.toggle('active',button.textContent.trim().endsWith(month));});
   const host=document.getElementById('studentMonthTable');host.innerHTML='<div class="student-loading">ກຳລັງໂຫຼດ '+monthlyEsc(month)+'…</div>';
-  const res=await callAPI('getMyClassMonth',{month:month});
+  const res=await fetcher(month);
   if(!res||res.error){host.innerHTML='<div class="student-loading">ບໍ່ສາມາດເປີດຕາຕະລາງໄດ້</div>';return;}
   /* ເຊື່ອງ GD, TB ແລະຄໍລຳຊັ້ນຮຽນຈາກສ່ວນສະແດງ ໂດຍບໍ່ປ່ຽນຂໍ້ມູນຕົ້ນສະບັບ */
   const rawHeader=res.header||[];
@@ -117,67 +118,72 @@ function studentShowProfile(){
 }
 async function studentShowMyBook(){
   monthlyModal('<div class="student-no-download">ກຳລັງໂຫຼດປຶ້ມຕິດຕາມ…</div>');
-  const res=await callAPI('getMyReport',{});if(!res||res.error){monthlyModal('<div class="student-no-download">ບໍ່ພົບປຶ້ມຕິດຕາມ</div>');return;}
+  const res=await callAPI('getMyReport',{});if(!res||res.error){monthlyModal('<div class="student-no-download">ບໍ່ສາມາດເປີດປຶ້ມຕິດຕາມ: '+monthlyEsc(typeof legacyReportError==='function'?legacyReportError(res&&res.error):((res&&res.error)||'ERROR'))+'</div>');return;}
   const subjects=res.subjects||[], headers=subjects.map(function(item){return '<th>'+monthlyEsc(item.subject||'')+'</th>';}).join('');
   const rows=(res.columns||[]).map(function(month, index){return '<tr><th>'+monthlyEsc(month)+'</th>'+subjects.map(function(item){return '<td>'+monthlyEsc(item.scores&&item.scores[index]!=null?item.scores[index]:'')+'</td>';}).join('')+'</tr>';}).join('');
   monthlyModal('<h2 style="margin-top:0;">📘 ປຶ້ມຕິດຕາມຂອງຂ້ອຍ</h2><div class="student-sheet-wrap"><table class="student-sheet"><thead><tr><th>ເດືອນ</th>'+headers+'</tr></thead><tbody>'+rows+'</tbody></table></div>');
 }
 function downloadPDF(filename){const element=document.getElementById('reportCardContent');if(!element||!window.html2pdf)return;html2pdf().set({margin:0.28,filename:(filename||'report')+'.pdf',html2canvas:{scale:2},pagebreak:{mode:['css','legacy'],avoid:['tr']},jsPDF:{unit:'in',format:'a4',orientation:'landscape'}}).from(element).save();}
 
-async function showClassScores(room) {
-  const overlay = document.getElementById('detailOverlay');
-  overlay.innerHTML = '<div class="detail-overlay"><div class="detail-card"><div class="detail-header"><div class="detail-name">📊 ກຳລັງໂຫຼດຄະແນນຫ້ອງ ' + legacyEscape(room) + '…</div><button class="close-btn" onclick="closeDetail()">✕</button></div></div></div>';
-  
+/* =====================================================================
+   ຄູ/Admin: "ເບິ່ງຄະແນນ ມ.x" — ໜ້າແບບດຽວກັບທີ່ນັກຮຽນເຫັນ (ເຕັມຈໍ, ເລືອກເດືອນ, ຕາຕະລາງຄະແນນຫ້ອງ)
+   ຕ່າງກັນແຕ່: ມີປຸ່ມ 🔍 ຄົ້ນຫາ ຢູ່ມຸມຂວາເທິງ ເພື່ອກັບໄປໜ້າຄົ້ນຫານັກຮຽນ
+   ===================================================================== */
+let teacherScoreRoom = '';
+function teacherScoreClose() {
+  const el = document.getElementById('teacherScorePortal'); if (el) el.remove();
+  document.body.classList.remove('student-mode');
+  const t = document.getElementById('tabSearch'), r = document.getElementById('tabRooms');
+  if (t) t.classList.add('active'); if (r) r.classList.remove('active');
+}
+function teacherScoreFocusSearch() { teacherScoreClose(); switchTab('search'); const n = document.getElementById('nameInput'); if (n) setTimeout(function () { try { n.focus(); } catch (e) {} }, 50); }
+async function teacherScoreOpen(room) {
+  room = room || teacherScoreRoom || (legacyRooms && legacyRooms[0]) || (currentAccess && currentAccess.room) || '';
+  if (!room) return alert('ຍັງບໍ່ມີຫ້ອງຮຽນທີ່ອະນຸຍາດ');
+  teacherScoreRoom = room;
+  const host = document.getElementById('appSection'); if (!host) return;
+  studentInjectStyle();
+  teacherScoreClose();
+  document.body.classList.add('student-mode');
+  const multi = legacyRooms && legacyRooms.length > 1;
+  const roomSelect = multi ? '<select id="teacherScoreRoomSel" onchange="teacherScoreOpen(this.value)" style="margin:0 0 6px;padding:5px 8px;border-radius:12px;border:1px solid #D8CEBB;font-family:inherit;font-size:.85rem;max-width:100%;">' + legacyRooms.map(function (r) { return '<option value="' + monthlyEsc(r) + '"' + (r === room ? ' selected' : '') + '>ຫ້ອງ ' + monthlyEsc(r) + '</option>'; }).join('') + '</select>' : '';
+  const portal = document.createElement('main');
+  portal.id = 'teacherScorePortal'; portal.className = 'student-portal';
+  portal.innerHTML = '<div class="student-top"><div class="student-head"><h1>📊 ເບິ່ງຄະແນນ ' + monthlyEsc(room) + '</h1>' + roomSelect + '<h3 class="student-month-title">ເລືອກເດືອນ</h3></div>'
+    + '<div class="student-bar"><button class="student-back" onclick="studentGoBack()" aria-label="ກັບຄືນໜ້າຂ່າວສານ">←</button><div id="studentMonthCards" class="month-cards"><span class="student-loading" style="padding:0">ກຳລັງໂຫຼດ…</span></div>'
+    + '<button class="teacher-search-btn" onclick="teacherScoreFocusSearch()" aria-label="ຄົ້ນຫານັກຮຽນ">🔍 ຄົ້ນຫາ</button></div></div><div id="studentMonthTable"></div>';
+  const c = getComputedStyle(document.body).backgroundColor;
+  portal.style.background = (!c || c === 'rgba(0, 0, 0, 0)' || c === 'transparent') ? '#faf5ea' : c;
+  host.appendChild(portal);
+  const tr = document.getElementById('tabRooms'), ts = document.getElementById('tabSearch');
+  if (tr) tr.classList.add('active'); if (ts) ts.classList.remove('active');
+  document.getElementById('studentMonthTable').innerHTML = '<div class="student-loading">ກຳລັງໂຫຼດຄະແນນ…</div>';
   const monthsRes = await callAPI('getClassMonths', { room: room });
-  if (!monthsRes || monthsRes.error || !monthsRes.months || !monthsRes.months.length) {
-    overlay.innerHTML = '<div class="detail-overlay"><div class="detail-card"><div class="detail-header"><div class="detail-name">📊 ຄະແນນຫ້ອງ ' + legacyEscape(room) + '</div><button class="close-btn" onclick="closeDetail()">✕</button></div><div class="empty">ບໍ່ພົບຂໍ້ມູນຄະແນນ</div></div></div>';
-    return;
-  }
-  
+  const cards = document.getElementById('studentMonthCards'); if (!cards) return;
+  if (!monthsRes || monthsRes.error || !(monthsRes.months || []).length) { cards.innerHTML = '<span>ບໍ່ພົບຂໍ້ມູນເດືອນ</span>'; document.getElementById('studentMonthTable').innerHTML = '<div class="student-loading">ບໍ່ພົບຂໍ້ມູນຄະແນນ</div>'; return; }
   const months = monthsRes.months;
-  const monthButtons = months.map(m => `<button class="month-card" onclick="loadClassMonthScores('${legacyEscape(room)}', '${legacyEscape(m)}')">📅 ${legacyEscape(m)}</button>`).join('');
-  
-  overlay.innerHTML = `
-    <div class="detail-overlay" onclick="if(event.target===this)closeDetail()">
-      <div class="detail-card class-score-fullscreen" style="width:100vw; max-width:100vw; height:95vh; max-height:95vh;">
-        <div class="detail-header">
-          <div class="detail-name">📊 ຄະແນນລວມຫ້ອງ ${legacyEscape(room)}</div>
-          <button class="close-btn" onclick="closeDetail()">✕</button>
-        </div>
-        <div class="month-cards" style="margin-bottom:15px;">${monthButtons}</div>
-        <div id="classMonthTableHost" class="report-table-wrap" style="overflow:auto; max-height:60vh;">
-          <div class="empty">ເລືອກເດືອນເພື່ອເບິ່ງຄະແນນ</div>
-        </div>
-      </div>
-    </div>
-  `;
-  
-  if (months.length > 0) loadClassMonthScores(room, months[0]);
+  cards.innerHTML = months.map(function (m) { return '<button class="month-card" onclick="teacherOpenMonth(\'' + monthlyEsc(m) + '\')">📅 ' + monthlyEsc(m) + '</button>'; }).join('');
+  teacherOpenMonth(months[0]);
 }
+function teacherOpenMonth(month) { const room = teacherScoreRoom; return studentOpenMonthWith(month, function (m) { return callAPI('getClassScores', { room: room, month: m }); }); }
 
-async function loadClassMonthScores(room, month) {
-  const host = document.getElementById('classMonthTableHost');
-  host.innerHTML = '<div class="empty">ກຳລັງໂຫຼດ…</div>';
-  
-  const res = await callAPI('getClassScores', { room: room, month: month });
-  if (!res || res.error) { host.innerHTML = '<div class="empty">ບໍ່ສາມາດໂຫຼດຂໍ້ມູນໄດ້</div>'; return; }
-  
-  const header = (res.header || []).map(h => `<th>${legacyEscape(h)}</th>`).join('');
-  const rows = (res.rows || []).map(row => `<tr>${row.map(c => `<td>${legacyEscape(c)}</td>`).join('')}</tr>`).join('');
-  
-  host.innerHTML = `
-    <div style="margin-bottom:10px; font-weight:800; color:var(--navy-950); display:flex; align-items:center; justify-content:space-between; gap:10px;"> <span>📅 ເດືອນ ${legacyEscape(month)}</span><button class="dl-btn" onclick="downloadClassPDF('${legacyEscape(room)}','${legacyEscape(month)}')">⬇ PDF</button></div>
-    <div class="class-report-a4-landscape">
-      <table class="report-table class-scores-table">
-        <thead><tr>${header}</tr></thead>
-        <tbody>${rows}</tbody>
-      </table>
-    </div>
-  `;
+/* ແທັບ "ເບິ່ງຄະແນນ": ຖ້າມີຫ້ອງດຽວ (ຄູປະຈຳຫ້ອງ) ເປີດຄະແນນເລີຍ; ຫຼາຍຫ້ອງ (Admin) ໃຫ້ເລືອກຫ້ອງກ່ອນ */
+function kctScoreRoomsOfUser() { return (legacyRooms && legacyRooms.length) ? legacyRooms : ((currentAccess && currentAccess.room) ? [currentAccess.room] : []); }
+function kctUpdateScoreTabLabel() {
+  const tab = document.getElementById('tabRooms'); if (!tab) return;
+  const rooms = kctScoreRoomsOfUser();
+  tab.textContent = '📊 ເບິ່ງຄະແນນ' + (rooms.length === 1 ? ' ' + rooms[0] : '');
 }
-
-function downloadClassPDF(room, month) {
-  const element = document.querySelector('#classMonthTableHost .class-report-a4-landscape');
-  if (!element || !window.html2pdf) return;
-  html2pdf().set({margin:0.79, filename:'ຄະແນນຫ້ອງ_'+room+'_'+month+'.pdf', image:{type:'jpeg',quality:0.98}, html2canvas:{scale:2, useCORS:true}, pagebreak:{mode:['css','legacy'],avoid:['tr']}, jsPDF:{unit:'in',format:'a4',orientation:'landscape'}}).from(element).save();
+function switchTab(tab) {
+  currentTab = tab;
+  const portal = document.getElementById('teacherScorePortal'); if (portal && tab === 'search') teacherScoreClose();
+  document.getElementById('tabSearch').classList.toggle('active', tab === 'search');
+  document.getElementById('tabRooms').classList.toggle('active', tab === 'rooms');
+  document.getElementById('searchPanel').style.display = tab === 'search' ? 'block' : 'none';
+  document.getElementById('roomsPanel').style.display = tab === 'rooms' ? 'block' : 'none';
+  if (tab === 'rooms') {
+    const rooms = kctScoreRoomsOfUser();
+    if (rooms.length === 1) { document.getElementById('roomsPanel').style.display = 'none'; document.getElementById('searchPanel').style.display = 'block'; teacherScoreOpen(rooms[0]); }
+    else renderRooms();
+  }
 }

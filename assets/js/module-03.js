@@ -230,41 +230,6 @@ async function loadApps(){
   grid.innerHTML = '';
 }
 
-function renderAppCard(a, index){
-  const canManage = currentAccess && (currentAccess.role || '').toLowerCase() === 'admin';
-  const initial = (a.name || '?').trim().charAt(0).toUpperCase();
-  if (index === 0) {
-    const firstWebUrl = 'https://kct92studio.blogspot.com/';
-    return `
-      <article class="news-card first-web-card" style="align-items:flex-start;">
-        <div style="display:flex; gap:0.8rem; align-items:center; margin-bottom:0.7rem;">
-          <div style="width:52px; height:52px; border-radius:12px; background:var(--navy-950); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:1.2rem; flex:0 0 auto;">${escapeHtml(initial)}</div>
-          <h3 style="margin:0;">${escapeHtml(a.name)}</h3>
-        </div>
-        <div class="first-web-frame"><iframe src="${firstWebUrl}" title="ເວັບຕົວທີໜຶ່ງ" loading="lazy"></iframe></div>
-        <a href="${firstWebUrl}" target="_blank" rel="noopener" style="display:inline-block; margin-top:0.8rem; padding:0.5rem 1.1rem; border-radius:8px; background:var(--navy-950); color:#fff; font-weight:800; font-size:0.82rem; text-decoration:none;">↗ ເປີດເຕັມໜ້າ</a>
-        ${canManage ? `<div style="margin-top:0.8rem; display:flex; gap:1rem;"><button onclick="editAppItem('${escapeHtml(a.id)}')" style="background:none; border:none; color:var(--teal-700); font-size:0.82rem; font-weight:800; cursor:pointer; padding:0;">✏️ ແກ້ໄຂ</button><button onclick="deleteAppItem('${escapeHtml(a.id)}')" style="background:none; border:none; color:#a3402c; font-size:0.82rem; font-weight:800; cursor:pointer; padding:0;">🗑️ ລຶບ</button></div>` : ''}
-      </article>
-    `;
-  }
-  return `
-    <article class="news-card" style="align-items:flex-start;">
-      <div style="display:flex; gap:0.8rem; align-items:center; margin-bottom:0.7rem;">
-        ${a.iconUrl
-          ? `<img src="${escapeHtml(a.iconUrl)}" style="width:52px; height:52px; border-radius:12px; object-fit:cover; flex:0 0 auto;" alt="">`
-          : `<div style="width:52px; height:52px; border-radius:12px; background:var(--navy-950); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:1.2rem; flex:0 0 auto;">${escapeHtml(initial)}</div>`}
-        <h3 style="margin:0;">${escapeHtml(a.name)}</h3>
-      </div>
-      <p>${escapeHtml(a.description)}</p>
-      ${a.downloadUrl ? `<a href="${escapeHtml(a.downloadUrl)}" target="_blank" style="display:inline-block; margin-top:0.8rem; padding:0.5rem 1.1rem; border-radius:8px; background:var(--navy-950); color:#fff; font-weight:800; font-size:0.82rem; text-decoration:none;">⬇️ ດາວໂຫຼດ</a>` : ''}
-      ${canManage ? `<div style="margin-top:0.8rem; display:flex; gap:1rem;">
-        <button onclick="editAppItem('${escapeHtml(a.id)}')" style="background:none; border:none; color:var(--teal-700); font-size:0.82rem; font-weight:800; cursor:pointer; padding:0;">✏️ ແກ້ໄຂ</button>
-        <button onclick="deleteAppItem('${escapeHtml(a.id)}')" style="background:none; border:none; color:#a3402c; font-size:0.82rem; font-weight:800; cursor:pointer; padding:0;">🗑️ ລຶບ</button>
-      </div>` : ''}
-    </article>
-  `;
-}
-
 let editingAppId = null;
 let selectedAppIconFile = null;
 
@@ -322,28 +287,6 @@ function toggleAppForm(){
   panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
 }
 
-function editAppItem(id){
-  const a = appsCache[id];
-  if (!a) return;
-  editingAppId = id;
-
-  document.getElementById('appNameInput').value = a.name || '';
-  document.getElementById('appDescInput').value = a.description || '';
-  document.getElementById('appDownloadInput').value = a.downloadUrl || '';
-  clearAppIcon();
-
-  if (a.iconUrl){
-    document.getElementById('appIconPreview').src = a.iconUrl;
-    document.getElementById('appIconPreviewWrap').style.display = 'block';
-    document.getElementById('appIconStatus').textContent = 'ໄອຄອນເດີມ — ເລືອກໃໝ່ຖ້າຕ້ອງການປ່ຽນ';
-  }
-
-  document.getElementById('appFormTitle').textContent = '✏️ ແກ້ໄຂແອັບ';
-  document.getElementById('appSubmitBtn').textContent = '💾 ບັນທຶກການແກ້ໄຂ';
-  document.getElementById('appFormPanel').style.display = 'block';
-  document.getElementById('appFormPanel').scrollIntoView({ behavior: 'smooth', block: 'start' });
-}
-
 async function submitApp(){
   const name = document.getElementById('appNameInput').value.trim();
   const description = document.getElementById('appDescInput').value.trim();
@@ -378,13 +321,6 @@ async function submitApp(){
 
   resetAppForm();
   document.getElementById('appFormPanel').style.display = 'none';
-  loadApps();
-}
-
-async function deleteAppItem(id){
-  if (!confirm('ຢືນຢັນລຶບແອັບນີ້?')) return;
-  const res = await callAPI('deleteApp', { email: currentUser.email, id });
-  if (res && res.error){ alert('❌ ຜິດພາດ: ' + res.error); return; }
   loadApps();
 }
 
