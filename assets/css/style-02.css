@@ -13,3 +13,8 @@
 #kctToast { position:fixed; left:50%; bottom:28px; transform:translateX(-50%); background:#2A2420; color:#fff; padding:10px 18px; border-radius:999px; font-size:14px; z-index:2147483000; display:none; align-items:center; gap:10px; box-shadow:0 6px 20px rgba(0,0,0,.25); max-width:90vw; }
 #kctToast .kct-spin { border-color:rgba(255,255,255,.3); border-top-color:#fff; }
 .student-loading::before, .empty.kct-loading::before { content:""; display:inline-block; width:1em; height:1em; margin-right:8px; border:3px solid rgba(46,94,90,.25); border-top-color:#2E5E5A; border-radius:50%; animation:kctspin .8s linear infinite; vertical-align:-.15em; }
+
+.teacher-search-btn { flex:0 0 auto; border:1px solid #2E5E5A; background:#2E5E5A; color:#fff; border-radius:999px; padding:6px 12px; font-family:inherit; font-size:.85rem; font-weight:700; cursor:pointer; white-space:nowrap; }
+.kct-skel { pointer-events:none; }
+.kct-skel-line { height:16px; border-radius:6px; background:linear-gradient(90deg,#eee6d6 25%,#f7f2e6 37%,#eee6d6 63%); background-size:400% 100%; animation:kctshimmer 1.2s ease infinite; }
+@keyframes kctshimmer { 0% { background-position:100% 50%; } 100% { background-position:0 50%; } }

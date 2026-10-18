@@ -241,7 +241,7 @@
       }
 
       /* ================= APP (student/score system) — scoped under #appSection ================= */
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Lao:wght@400;600;700&family=Noto+Serif+Lao:wght@600;700&display=swap');
+/* ຟອນຍ້າຍໄປ <link> ໃນ index.html ເພື່ອບໍ່ບລັອກການສະແດງຜົນ (ເຄີຍເປັນ @import) */
 #appSection {
     --cream: #FAF6EC;
     --ink: #2A2420;
