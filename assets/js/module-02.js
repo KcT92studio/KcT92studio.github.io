@@ -1,11 +1,32 @@
+/* ===== ການເປີດ/ປິດລະບົບນັກຮຽນ + ປຸ່ມ Back ຂອງໂທລະສັບ =====
+   ປຸ່ມ Back ຂອງເຄື່ອງຈະຖອຍຄືນທີລະຂັ້ນ: ໜ້າຄະແນນຫ້ອງ → ໜ້າຄົ້ນຫາ → ໜ້າຂ່າວສານ (ບໍ່ອອກຈາກເວັບທັນທີ) */
+let kctNavDepth_ = 0, kctNavSuppress_ = 0;
+function kctNavPush_() { try { history.pushState({ kct: 1 }, ''); kctNavDepth_++; } catch (e) {} }
+function kctNavPop_(n) { // ໃຊ້ເມື່ອປິດດ້ວຍປຸ່ມໃນເວັບ: ເກັບກວາດ history ທີ່ເພີ່ມໄວ້ເພື່ອບໍ່ໃຫ້ຕົກຄ້າງ
+  n = Math.min(n == null ? kctNavDepth_ : n, kctNavDepth_);
+  if (n > 0) { kctNavDepth_ -= n; kctNavSuppress_++; try { history.go(-n); } catch (e) { kctNavSuppress_--; } }
+}
+window.addEventListener('popstate', function () {
+  if (kctNavSuppress_ > 0) { kctNavSuppress_--; return; }
+  if (kctNavDepth_ > 0) kctNavDepth_--;
+  const portal = document.getElementById('teacherScorePortal');
+  if (portal) { teacherScoreClose(); switchTab('search'); return; }
+  const app = document.getElementById('appSection');
+  if (app && app.classList.contains('open')) closeApp(true);
+});
+
 function openApp() {
-  document.getElementById('appSection').classList.add('open');
+  const app = document.getElementById('appSection');
+  const wasOpen = app.classList.contains('open');
+  app.classList.add('open');
   document.body.style.overflow = 'hidden';
   window.scrollTo(0, 0);
+  if (!wasOpen) kctNavPush_();
 }
-function closeApp() {
+function closeApp(fromPop) {
   document.getElementById('appSection').classList.remove('open');
   document.body.style.overflow = '';
+  if (fromPop !== true) kctNavPop_();
 }
 
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx10wFqFdxjoF0ytC8OpaeCI4cFx_viL0BGzwrUeP8F_9HOaOWtMC-AuIdb4geNxNS7Ww/exec';
@@ -30,9 +51,11 @@ function updateHeaderAuthUI(loggedIn, label) {
     loginBtn.style.display = 'none';
     chip.style.display = 'flex';
     if (chipLabel) chipLabel.textContent = '👋 ' + (label || 'ເຂົ້າສູ່ລະບົບແລ້ວ');
+    document.querySelectorAll('.hero-login-pill').forEach(function (el) { el.textContent = '📊 ເຂົ້າລະບົບນັກຮຽນ'; });
   } else {
     loginBtn.style.display = 'inline-flex';
     chip.style.display = 'none';
+    document.querySelectorAll('.hero-login-pill').forEach(function (el) { el.textContent = '👨‍🎓 ເຂົ້າສູ່ລະບົບ'; });
   }
 }
 

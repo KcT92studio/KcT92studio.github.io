@@ -130,19 +130,23 @@ function downloadPDF(filename){const element=document.getElementById('reportCard
    ຕ່າງກັນແຕ່: ມີປຸ່ມ 🔍 ຄົ້ນຫາ ຢູ່ມຸມຂວາເທິງ ເພື່ອກັບໄປໜ້າຄົ້ນຫານັກຮຽນ
    ===================================================================== */
 let teacherScoreRoom = '';
-function teacherScoreClose() {
+function teacherScoreClose(popNav) {
   const el = document.getElementById('teacherScorePortal'); if (el) el.remove();
+  if (el && popNav === true) kctNavPop_(1);
   document.body.classList.remove('student-mode');
   const t = document.getElementById('tabSearch'), r = document.getElementById('tabRooms');
   if (t) t.classList.add('active'); if (r) r.classList.remove('active');
 }
-function teacherScoreFocusSearch() { teacherScoreClose(); switchTab('search'); const n = document.getElementById('nameInput'); if (n) setTimeout(function () { try { n.focus(); } catch (e) {} }, 50); }
+/* ລູກສອນ ← ໃນໜ້າຄະແນນຫ້ອງ: ຖອຍກັບໜ້າຄົ້ນຫາ (ໜ້າກ່ອນໜ້າ) ບໍ່ອອກຈາກລະບົບ */
+function teacherScoreBack() { teacherScoreClose(true); switchTab('search'); }
+function teacherScoreFocusSearch() { teacherScoreClose(true); switchTab('search'); const n = document.getElementById('nameInput'); if (n) setTimeout(function () { try { n.focus(); } catch (e) {} }, 50); }
 async function teacherScoreOpen(room) {
   room = room || teacherScoreRoom || (legacyRooms && legacyRooms[0]) || (currentAccess && currentAccess.room) || '';
   if (!room) return alert('ຍັງບໍ່ມີຫ້ອງຮຽນທີ່ອະນຸຍາດ');
   teacherScoreRoom = room;
   const host = document.getElementById('appSection'); if (!host) return;
   studentInjectStyle();
+  const hadPortal = !!document.getElementById('teacherScorePortal');
   teacherScoreClose();
   document.body.classList.add('student-mode');
   const multi = legacyRooms && legacyRooms.length > 1;
@@ -150,11 +154,12 @@ async function teacherScoreOpen(room) {
   const portal = document.createElement('main');
   portal.id = 'teacherScorePortal'; portal.className = 'student-portal';
   portal.innerHTML = '<div class="student-top"><div class="student-head"><h1>📊 ເບິ່ງຄະແນນ ' + monthlyEsc(room) + '</h1>' + roomSelect + '<h3 class="student-month-title">ເລືອກເດືອນ</h3></div>'
-    + '<div class="student-bar"><button class="student-back" onclick="studentGoBack()" aria-label="ກັບຄືນໜ້າຂ່າວສານ">←</button><div id="studentMonthCards" class="month-cards"><span class="student-loading" style="padding:0">ກຳລັງໂຫຼດ…</span></div>'
+    + '<div class="student-bar"><button class="student-back" onclick="teacherScoreBack()" aria-label="ກັບຄືນໜ້າຄົ້ນຫາ">←</button><div id="studentMonthCards" class="month-cards"><span class="student-loading" style="padding:0">ກຳລັງໂຫຼດ…</span></div>'
     + '<button class="teacher-search-btn" onclick="teacherScoreFocusSearch()" aria-label="ຄົ້ນຫານັກຮຽນ">🔍 ຄົ້ນຫາ</button></div></div><div id="studentMonthTable"></div>';
   const c = getComputedStyle(document.body).backgroundColor;
   portal.style.background = (!c || c === 'rgba(0, 0, 0, 0)' || c === 'transparent') ? '#faf5ea' : c;
   host.appendChild(portal);
+  if (!hadPortal) kctNavPush_();
   const tr = document.getElementById('tabRooms'), ts = document.getElementById('tabSearch');
   if (tr) tr.classList.add('active'); if (ts) ts.classList.remove('active');
   document.getElementById('studentMonthTable').innerHTML = '<div class="student-loading">ກຳລັງໂຫຼດຄະແນນ…</div>';
@@ -176,7 +181,7 @@ function kctUpdateScoreTabLabel() {
 }
 function switchTab(tab) {
   currentTab = tab;
-  const portal = document.getElementById('teacherScorePortal'); if (portal && tab === 'search') teacherScoreClose();
+  const portal = document.getElementById('teacherScorePortal'); if (portal && tab === 'search') teacherScoreClose(true);
   document.getElementById('tabSearch').classList.toggle('active', tab === 'search');
   document.getElementById('tabRooms').classList.toggle('active', tab === 'rooms');
   document.getElementById('searchPanel').style.display = tab === 'search' ? 'block' : 'none';
