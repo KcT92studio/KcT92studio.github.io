@@ -19,6 +19,10 @@
   .student-sheet th { background:#f5e7da; color:#4f251f; font-weight:800; position:sticky; top:0; z-index:1; }
   .student-sheet td:first-child, .student-sheet th:first-child { position:sticky; left:0; background:#fffaf4; z-index:2; }
   .student-sheet th:first-child { z-index:3; background:#f5e7da; }
+  .absent-score-table th { background:#eaf2ff; color:#174a8b; border-color:#8fb3df; }
+  .absent-score-table td { background:#fff; border-color:#b8cbe3; }
+  .absent-score-table td.absent-cell { background:#fff1e8; color:#b54708; font-weight:800; }
+  .absent-score-table th:first-child { background:#dbeafe; color:#174a8b; }
   .student-no-download { padding:10px 12px; margin:14px 0; border-radius:9px; background:#eef7f7; color:#26565d; font-size:.88rem; }
   .student-modal { position:fixed; inset:0; z-index:9999; display:flex; align-items:center; justify-content:center; padding:16px; background:rgba(10,31,39,.55); }
   .student-modal-card { max-width:950px; max-height:90vh; overflow:auto; width:100%; background:#fff; border-radius:16px; padding:20px; }
