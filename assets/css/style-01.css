@@ -12,11 +12,6 @@
         --shadow: 0 18px 44px rgba(13, 43, 58, 0.1);
         --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
       }
-      :root[data-theme="blue"] { --navy-950:#102a56; --navy-900:#1e40af; --teal-700:#2563eb; --gold-500:#60a5fa; --gold-300:#bfdbfe; --paper:#f4f8ff; --ink:#172554; --muted:#526581; --line:#cbdaf5; }
-      :root[data-theme="green"] { --navy-950:#123b2a; --navy-900:#166534; --teal-700:#16a34a; --gold-500:#4ade80; --gold-300:#bbf7d0; --paper:#f3fbf5; --ink:#163326; --muted:#587164; --line:#cce8d3; }
-      :root[data-theme="purple"] { --navy-950:#29134f; --navy-900:#581c87; --teal-700:#7c3aed; --gold-500:#a78bfa; --gold-300:#ddd6fe; --paper:#faf7ff; --ink:#2e1853; --muted:#6c5c82; --line:#e1d5f5; }
-      :root[data-theme="orange"] { --navy-950:#54200d; --navy-900:#9a3412; --teal-700:#ea580c; --gold-500:#fb923c; --gold-300:#fed7aa; --paper:#fff8f2; --ink:#4a2113; --muted:#806657; --line:#f2d5c2; }
-      :root[data-theme="pink"] { --navy-950:#571338; --navy-900:#9d174d; --teal-700:#db2777; --gold-500:#f472b6; --gold-300:#fbcfe8; --paper:#fff6fb; --ink:#501634; --muted:#805d70; --line:#f3d0e1; }
 
       * { box-sizing: border-box; }
       html { scroll-behavior: smooth; }
@@ -32,12 +27,6 @@
       button, input, textarea { font: inherit; }
       a { color: inherit; }
       :focus-visible { outline: 3px solid var(--gold-500); outline-offset: 3px; }
-      .theme-toggle { border:1px solid var(--line); background:var(--white); color:var(--navy-950); border-radius:999px; width:38px; height:38px; cursor:pointer; font-size:1.05rem; }
-      .theme-picker { position:absolute; top:46px; right:0; z-index:1000; display:flex; gap:8px; padding:10px; border:1px solid var(--line); border-radius:14px; background:var(--white); box-shadow:0 12px 30px rgba(13,43,58,.18); }
-      .theme-picker[hidden] { display:none; }
-      .theme-swatch { width:30px; height:30px; border:3px solid var(--white); outline:1px solid rgba(13,43,58,.22); border-radius:50%; cursor:pointer; padding:0; }
-      .theme-old { background:#168b83; } .theme-blue { background:#2563eb; } .theme-green { background:#16a34a; } .theme-purple { background:#7c3aed; } .theme-orange { background:#ea580c; } .theme-pink { background:#db2777; }
-      .theme-swatch.active { outline:3px solid var(--navy-950); outline-offset:2px; }
 
       .shell { width: min(1120px, calc(100% - 2rem)); margin: 0 auto; }
 
