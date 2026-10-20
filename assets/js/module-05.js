@@ -1,5 +1,7 @@
 let studentMonthsCache = [];
 let studentProfileCache = null;
+let studentClassMonthCache = Object.create(null);
+let studentCurrentMonth = '';
 function monthlyEsc(value){const e=document.createElement('div');e.textContent=value==null?'':String(value);return e.innerHTML;}
 function monthlyClose(){const modal=document.getElementById('studentMonthlyModal');if(modal)modal.remove();}
 function monthlyModal(content){monthlyClose();const wrap=document.createElement('div');wrap.id='studentMonthlyModal';wrap.className='student-modal';wrap.innerHTML='<div class="student-modal-card"><button class="student-modal-close" onclick="monthlyClose()">×</button>'+content+'</div>';wrap.addEventListener('click',function(event){if(event.target===wrap)monthlyClose();});document.body.appendChild(wrap);}
@@ -77,7 +79,21 @@ function onLoginSuccessFromAuth(access) {
   if (String(access.role || '').toLowerCase() === 'student') studentMonthlyInit();
   else init();
 }
-function logoutUser(){ try{localStorage.removeItem('kct_id_token');}catch(e){} location.reload(); }
+function logoutUser(){
+  try{localStorage.removeItem('kct_id_token');localStorage.removeItem('kct_role');}catch(e){}
+  currentIdToken=null; currentUser=null; currentAccess=null;
+  const portal=document.getElementById('teacherScorePortal');if(portal)portal.remove();
+  const main=document.getElementById('mainApp');if(main){main.innerHTML='';main.style.display='none';}
+  const gate=document.getElementById('loginGate');if(gate)gate.style.display='block';
+  const loginStep=document.getElementById('loginStep');if(loginStep)loginStep.style.display='block';
+  ['requestStep','pendingStep'].forEach(function(id){const el=document.getElementById(id);if(el)el.style.display='none';});
+  document.body.classList.remove('student-mode');
+  document.body.style.overflow='';
+  document.documentElement.style.overflow='';
+  if(typeof updateHeaderAuthUI==='function')updateHeaderAuthUI(false,'');
+  if(typeof closeApp==='function')closeApp(true);
+  window.scrollTo(0,0);
+}
 
 async function studentMonthlyInit(){
   const main = document.getElementById('mainApp');
@@ -95,9 +111,11 @@ async function studentMonthlyInit(){
 }
 async function studentOpenMonth(month){ return studentOpenMonthWith(month, function(m){ return callAPI('getMyClassMonth',{month:m}); }); }
 async function studentOpenMonthWith(month, fetcher){
+  studentCurrentMonth=month;
   document.querySelectorAll('.month-card').forEach(function(button){button.classList.toggle('active',button.textContent.trim().endsWith(month));});
   const host=document.getElementById('studentMonthTable');host.innerHTML='<div class="student-loading">ກຳລັງໂຫຼດ '+monthlyEsc(month)+'…</div>';
-  const res=await fetcher(month);
+  const res=studentClassMonthCache[month]||await fetcher(month);
+  if(res&&!res.error)studentClassMonthCache[month]=res;
   if(!res||res.error){host.innerHTML='<div class="student-loading">ບໍ່ສາມາດເປີດຕາຕະລາງໄດ້</div>';return;}
   /* ເຊື່ອງ GD, TB ແລະຄໍລຳຊັ້ນຮຽນຈາກສ່ວນສະແດງ ໂດຍບໍ່ປ່ຽນຂໍ້ມູນຕົ້ນສະບັບ */
   const rawHeader=res.header||[];
@@ -120,22 +138,47 @@ function studentShowProfile(){
 }
 function studentAbsentValue(value){
   const v=String(value==null?'':value).trim().toLowerCase().replace(/\s+/g,'');
-  if(!v)return false;
+  if(!v)return true;
   return v==='ບໍ່ໄດ້ເສັງ'||v==='ບໍ່ເສັງ'||v==='ບໍ່ໄດ້ສອບ'||v==='ບໍ່ສອບ'||v==='absent'||v==='ຂາດ'||v==='ຂາດສອບ'||v==='ບໍ່ມີຄະແນນ'||v==='-';
 }
+function studentRowKey(value){
+  return String(value==null?'':value).trim().toLowerCase()
+    .replace(/^\s*(ທ້າວ|ນາງ|ເດັກຊາຍ|ເດັກຍິງ|ນ\.|ທ\.|ດ\.ຊ\.|ດ\.ຍ\.)\s*/,'')
+    .replace(/[\u0EC8-\u0ECC\s\u200B-\u200D\uFEFF.,\-_\/()]+/g,'')
+    .replace(/ຫຼ/g,'ຫລ');
+}
+function studentFindOwnRow(result){
+  const profile=studentProfileCache||{};
+  const candidates=[profile.name,((profile.firstName||'')+' '+(profile.lastName||'')),currentUser&&currentUser.name,profile.studentId,currentUser&&currentUser.studentId].map(studentRowKey).filter(Boolean);
+  const rows=result&&result.rows||[];
+  return rows.find(function(row){
+    const first=studentRowKey(row&&row[0]);
+    return first && candidates.some(function(key){return first===key||first.indexOf(key)>=0||key.indexOf(first)>=0;});
+  });
+}
 async function studentShowAbsentScores(){
-  monthlyModal('<div class="student-no-download">ກຳລັງກວດຄະແນນຂອງຂ້ອຍ…</div>');
-  const res=await callAPI('getMyReport',{});
-  if(!res||res.error){monthlyModal('<div class="student-no-download">ບໍ່ສາມາດໂຫຼດຄະແນນໄດ້: '+monthlyEsc(typeof legacyReportError==='function'?legacyReportError(res&&res.error):((res&&res.error)||'ERROR'))+'</div>');return;}
-  const subjects=(res.subjects||[]).filter(function(item){return (item.scores||[]).some(studentAbsentValue);});
-  if(!subjects.length){monthlyModal('<h2 style="margin-top:0;">✅ ຄະແນນບໍ່ໄດ້ເສັງ</h2><div class="student-no-download">ບໍ່ພົບວິຊາທີ່ບໍ່ໄດ້ເສັງ</div>');return;}
-  const columns=res.columns||[];
-  const headers=subjects.map(function(item){return '<th>'+monthlyEsc(item.subject||item.sourceSubject||'')+'</th>';}).join('');
-  const rows=columns.map(function(month,index){
-    const cells=subjects.map(function(item){const val=item.scores&&item.scores[index]!=null?item.scores[index]:'';return '<td class="'+(studentAbsentValue(val)?'absent-cell':'')+'">'+monthlyEsc(val)+'</td>';}).join('');
-    return '<tr><th>'+monthlyEsc(month)+'</th>'+cells+'</tr>';
-  }).filter(function(row){return row.indexOf('absent-cell')!==-1;}).join('');
-  monthlyModal('<h2 style="margin-top:0;">⚠️ ຄະແນນບໍ່ໄດ້ເສັງ</h2><p style="margin-top:-6px;color:#6b6259;font-size:13px;">ສະແດງສະເພາະຄະແນນຂອງນັກຮຽນຄົນນີ້</p><div class="student-sheet-wrap"><table class="student-sheet absent-score-table"><thead><tr><th>ເດືອນ/ລາຍການ</th>'+headers+'</tr></thead><tbody>'+rows+'</tbody></table></div>');
+  const month=studentCurrentMonth||(studentMonthsCache||[])[0];
+  if(!month){monthlyModal('<div class="student-no-download">ບໍ່ພົບເດືອນຄະແນນ</div>');return;}
+  let res=studentClassMonthCache[month];
+  if(!res){monthlyModal('<div class="student-no-download">ກຳລັງອ່ານແຖວຄະແນນ M2…</div>');res=await callAPI('getMyClassMonth',{month:month});if(res&&!res.error)studentClassMonthCache[month]=res;}
+  const row=studentFindOwnRow(res);
+  if(!res||res.error||!row){monthlyModal('<h2 style="margin-top:0;">⚠️ ຄະແນນບໍ່ໄດ້ເສັງ</h2><div class="student-no-download">ບໍ່ພົບແຖວຊື່ຂອງນັກຮຽນໃນຕາຕະລາງ M2</div>');return;}
+    const rawHeader=res.header||[], hidden=[];
+    rawHeader.forEach(function(cell,i){
+      const label=String(cell==null?'':cell).trim().toLowerCase().replace(/\s+/g,'');
+      if(i===0||label==='gd'||label==='tb'||label.indexOf('ຊັ້ນຮຽນ')!==-1||label.indexOf('ຫ້ອງຮຽນ')!==-1)hidden.push(i);
+    });
+    const cells=[];
+    rawHeader.forEach(function(header,i){
+      if(hidden.indexOf(i)!==-1)return;
+      const value=row[i]==null?'':row[i];
+      if(studentAbsentValue(value))cells.push('<tr><th>'+monthlyEsc(header)+'</th><td class="absent-cell">'+monthlyEsc(value||'—')+'</td></tr>');
+    });
+    if(cells.length){
+      monthlyModal('<h2 style="margin-top:0;">⚠️ ຄະແນນບໍ່ໄດ້ເສັງ</h2><p style="margin-top:-6px;color:#6b6259;font-size:13px;">ແຖວຂອງນັກຮຽນຈາກຕາຕະລາງ M2 ເດືອນ '+monthlyEsc(month)+'</p><div class="absent-month-section"><table class="student-sheet absent-score-table"><thead><tr><th>ວິຊາ</th><th>ສະຖານະ/ຄະແນນ</th></tr></thead><tbody>'+cells.join('')+'</tbody></table></div>');
+      return;
+    }
+  monthlyModal('<h2 style="margin-top:0;">✅ ຄະແນນບໍ່ໄດ້ເສັງ</h2><div class="student-no-download">ເດືອນນີ້ບໍ່ພົບວິຊາທີ່ບໍ່ໄດ້ເສັງ</div>');
 }
 async function studentShowMyBook(){
   monthlyModal('<div class="student-no-download">ກຳລັງໂຫຼດປຶ້ມຕິດຕາມ…</div>');

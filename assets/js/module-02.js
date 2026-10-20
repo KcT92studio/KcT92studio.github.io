@@ -26,6 +26,9 @@ function openApp() {
 function closeApp(fromPop) {
   document.getElementById('appSection').classList.remove('open');
   document.body.style.overflow = '';
+  document.documentElement.style.overflow = '';
+  document.body.classList.remove('student-mode');
+  // ການກັບໜ້າເວັບບໍ່ແມ່ນ Logout: ຮັກສາສິດ, ຄ່າຕັ້ງຄ່າ, ໜ້າງານ ແລະຕາຕະລາງເກົ່າໄວ້
   if (fromPop !== true) kctNavPop_();
 }
 
