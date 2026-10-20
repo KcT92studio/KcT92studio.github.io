@@ -41,6 +41,8 @@ function studentInjectStyle(){
   +'.student-portal .class-scores-table thead th{height:auto;padding-bottom:4px;position:sticky;top:0;z-index:3;background:#f0f4f7;box-shadow:inset 0 -1px 0 #333,inset -1px 0 0 #333;}'
   +'.student-portal .class-scores-table thead th:first-child{position:sticky;left:0;top:0;z-index:6;background:#f0f4f7;}'
   +'.student-portal .class-scores-table th:first-child,.student-portal .class-scores-table td:first-child{text-align:left;padding-left:6px;font-size:12px;font-weight:600;}'
+  +'.student-portal .student-action.absent-action{background:#fff7ed !important;border-color:#f59e0b !important;color:#9a3412 !important;}'
+  +'.student-portal .student-action.absent-action:active{transform:scale(.97);}'
   +'.student-portal .student-loading{padding:12px 16px;color:#5a6b7a;font-size:14px;}';
   document.head.appendChild(st);
 }
@@ -82,7 +84,7 @@ async function studentMonthlyInit(){
   if (!main) return;
   main.style.display='block';
   studentInjectStyle();document.body.classList.add('student-mode');
-  main.innerHTML='<main class="student-portal"><div class="student-top"><div class="student-head"><h1>ຄະແນນ ແລະ ປຶ້ມຕິດຕາມ</h1><div class="student-actions"><button class="student-action" onclick="studentShowProfile()">👤 ຂໍ້ມູນຂອງຂ້ອຍ</button><button class="student-action" onclick="studentShowMyBook()">📘 ປຶ້ມຕິດຕາມຂອງຂ້ອຍ</button></div><h3 class="student-month-title">ເລືອກເດືອນ</h3></div><div class="student-bar"><button class="student-back" onclick="studentGoBack()" aria-label="ກັບຄືນ">←</button><div id="studentMonthCards" class="month-cards"><span>ກຳລັງໂຫຼດ…</span></div></div></div><div id="studentMonthTable"></div></main>';
+  main.innerHTML='<main class="student-portal"><div class="student-top"><div class="student-head"><h1>ຄະແນນຂອງຂ້ອຍ</h1><div class="student-actions"><button class="student-action" onclick="studentShowProfile()">👤 ຂໍ້ມູນຂອງຂ້ອຍ</button><button class="student-action absent-action" onclick="studentShowAbsentScores()">⚠️ ຄະແນນບໍ່ໄດ້ເສັງ</button></div><h3 class="student-month-title">ເລືອກເດືອນ</h3></div><div class="student-bar"><button class="student-back" onclick="studentGoBack()" aria-label="ກັບຄືນ">←</button><div id="studentMonthCards" class="month-cards"><span>ກຳລັງໂຫຼດ…</span></div></div></div><div id="studentMonthTable"></div></main>';
   (function(){const c=getComputedStyle(document.body).backgroundColor;const bg=(!c||c==='rgba(0, 0, 0, 0)'||c==='transparent')?'#faf5ea':c;const m=main.querySelector('.student-portal');if(m)m.style.background=bg;})();
   const [monthsRes, profileRes] = await Promise.all([callAPI('getMyMonths',{}), callAPI('getMyStudentProfile',{})]);
   if (!monthsRes || monthsRes.error) { document.getElementById('studentMonthCards').innerHTML='<span>ບໍ່ພົບຂໍ້ມູນເດືອນ</span>'; return; }
@@ -115,6 +117,25 @@ async function studentOpenMonthWith(month, fetcher){
 function studentShowProfile(){
   const s=studentProfileCache||{};
   monthlyModal('<h2 style="margin-top:0;">👤 ຂໍ້ມູນຂອງຂ້ອຍ</h2><div class="student-info"><p><b>ຊື່:</b> '+monthlyEsc(s.name || ((s.firstName||'')+' '+(s.lastName||'')))+'</p><p><b>ຫ້ອງ:</b> '+monthlyEsc(s.room)+'</p><p><b>ເພດ:</b> '+monthlyEsc(s.gender)+'</p><p><b>ວັນເກີດ:</b> '+monthlyEsc(s.dob)+'</p><p><b>ພໍ່:</b> '+monthlyEsc(s.father)+'</p><p><b>ແມ່:</b> '+monthlyEsc(s.mother)+'</p><p><b>ເບີໂທ:</b> '+monthlyEsc(s.phone)+'</p><p><b>ທີ່ຢູ່:</b> '+monthlyEsc(s.address)+'</p></div>');
+}
+function studentAbsentValue(value){
+  const v=String(value==null?'':value).trim().toLowerCase().replace(/\s+/g,'');
+  if(!v)return false;
+  return v==='ບໍ່ໄດ້ເສັງ'||v==='ບໍ່ເສັງ'||v==='ບໍ່ໄດ້ສອບ'||v==='ບໍ່ສອບ'||v==='absent'||v==='ຂາດ'||v==='ຂາດສອບ'||v==='ບໍ່ມີຄະແນນ'||v==='-';
+}
+async function studentShowAbsentScores(){
+  monthlyModal('<div class="student-no-download">ກຳລັງກວດຄະແນນຂອງຂ້ອຍ…</div>');
+  const res=await callAPI('getMyReport',{});
+  if(!res||res.error){monthlyModal('<div class="student-no-download">ບໍ່ສາມາດໂຫຼດຄະແນນໄດ້: '+monthlyEsc(typeof legacyReportError==='function'?legacyReportError(res&&res.error):((res&&res.error)||'ERROR'))+'</div>');return;}
+  const subjects=(res.subjects||[]).filter(function(item){return (item.scores||[]).some(studentAbsentValue);});
+  if(!subjects.length){monthlyModal('<h2 style="margin-top:0;">✅ ຄະແນນບໍ່ໄດ້ເສັງ</h2><div class="student-no-download">ບໍ່ພົບວິຊາທີ່ບໍ່ໄດ້ເສັງ</div>');return;}
+  const columns=res.columns||[];
+  const headers=subjects.map(function(item){return '<th>'+monthlyEsc(item.subject||item.sourceSubject||'')+'</th>';}).join('');
+  const rows=columns.map(function(month,index){
+    const cells=subjects.map(function(item){const val=item.scores&&item.scores[index]!=null?item.scores[index]:'';return '<td class="'+(studentAbsentValue(val)?'absent-cell':'')+'">'+monthlyEsc(val)+'</td>';}).join('');
+    return '<tr><th>'+monthlyEsc(month)+'</th>'+cells+'</tr>';
+  }).filter(function(row){return row.indexOf('absent-cell')!==-1;}).join('');
+  monthlyModal('<h2 style="margin-top:0;">⚠️ ຄະແນນບໍ່ໄດ້ເສັງ</h2><p style="margin-top:-6px;color:#6b6259;font-size:13px;">ສະແດງສະເພາະຄະແນນຂອງນັກຮຽນຄົນນີ້</p><div class="student-sheet-wrap"><table class="student-sheet absent-score-table"><thead><tr><th>ເດືອນ/ລາຍການ</th>'+headers+'</tr></thead><tbody>'+rows+'</tbody></table></div>');
 }
 async function studentShowMyBook(){
   monthlyModal('<div class="student-no-download">ກຳລັງໂຫຼດປຶ້ມຕິດຕາມ…</div>');
