@@ -128,7 +128,7 @@ async function studentOpenMonthWith(month, fetcher){
   if(!hiddenCols.length&&rawHeader.length>4)hiddenCols.push(1,2,3);
   const dropCols=function(r){r=r||[];return r.filter(function(_,i){return hiddenCols.indexOf(i)===-1;});};
   const head=dropCols(rawHeader).map(function(cell){return '<th>'+monthlyEsc(cell)+'</th>';}).join('');
-  const rows=(res.rows||[]).map(function(row){return '<tr>'+dropCols(row).map(function(cell){return '<td>'+monthlyEsc(cell)+'</td>';}).join('')+'</tr>';}).join('');
+  const rows=(res.rows||[]).map(function(row){const values=dropCols(row);return '<tr>'+values.map(function(cell,index){const missing=index>0&&studentAbsentValue(cell);return '<td class="'+(missing?'absent-cell':'score-cell')+'">'+monthlyEsc(cell)+'</td>';}).join('')+'</tr>';}).join('');
   host.innerHTML='<div class="class-report-a4-landscape"><div class="report-table-wrap"><table class="report-table class-scores-table"><thead><tr>'+head+'</tr></thead><tbody>'+rows+'</tbody></table></div></div>';
   studentFitTable();
 }
@@ -139,7 +139,7 @@ function studentShowProfile(){
 function studentAbsentValue(value){
   const v=String(value==null?'':value).trim().toLowerCase().replace(/\s+/g,'');
   if(!v)return true;
-  return v==='ບໍ່ໄດ້ເສັງ'||v==='ບໍ່ເສັງ'||v==='ບໍ່ໄດ້ສອບ'||v==='ບໍ່ສອບ'||v==='absent'||v==='ຂາດ'||v==='ຂາດສອບ'||v==='ບໍ່ມີຄະແນນ'||v==='-';
+  return v.indexOf('ຂາດ')===0||v==='ບໍ່ໄດ້ເສັງ'||v==='ບໍ່ເສັງ'||v==='ບໍ່ໄດ້ສອບ'||v==='ບໍ່ສອບ'||v==='absent'||v==='ບໍ່ມີຄະແນນ'||v==='-';
 }
 function studentRowKey(value){
   return String(value==null?'':value).trim().toLowerCase()
