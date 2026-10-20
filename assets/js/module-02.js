@@ -58,25 +58,7 @@ function updateHeaderAuthUI(loggedIn, label) {
     document.querySelectorAll('.hero-login-pill').forEach(function (el) { el.textContent = '👨‍🎓 ເຂົ້າສູ່ລະບົບ'; });
   }
 }
-function applyTheme(theme) {
-  const allowed = ['old', 'blue', 'green', 'purple', 'orange', 'pink'];
-  theme = allowed.includes(theme) ? theme : 'old';
-  if (theme === 'old') document.documentElement.removeAttribute('data-theme');
-  else document.documentElement.setAttribute('data-theme', theme);
-  try { localStorage.setItem('kct_theme', theme); } catch (e) {}
-  document.querySelectorAll('.theme-swatch').forEach(function (el) { el.classList.toggle('active', el.dataset.theme === theme); });
-  const picker = document.getElementById('themePicker'); if (picker) picker.hidden = true;
-}
-function toggleThemePicker() {
-  const picker = document.getElementById('themePicker'); if (!picker) return;
-  picker.hidden = !picker.hidden;
-}
-function restoreTheme() {
-  let theme = 'old';
-  try { theme = localStorage.getItem('kct_theme') || 'old'; } catch (e) {}
-  applyTheme(theme);
-}
-restoreTheme();
+
 async function restoreLoginFromStorage() {
   let saved;
   try { saved = localStorage.getItem('kct_id_token'); } catch (e) { return; }
@@ -163,7 +145,7 @@ async function checkMyAccess() {
 }
 
 /* ===== ຊັ້ນ API: cache + ກັນເອີ້ນຊ້ຳ + ໂຕບອກສະຖານະກຳລັງໂຫຼດ ===== */
-const API_CACHE_TTL_ = { getNews: 60e3, getApps: 60e3, getBooks: 60e3, getAccessibleRooms: 300e3, getRoomSummaries: 120e3, getMyMonths: 300e3, getMyStudentProfile: 300e3, getMyClassMonth: 120e3, getMyReport: 120e3, getClassMonths: 300e3, getClassScores: 120e3, getRosterDirectory: 120e3, getRosterStudentReport: 120e3 };
+const API_CACHE_TTL_ = { getNews: 60e3, getApps: 60e3, getBooks: 60e3, getAccessibleRooms: 300e3, getMyMonths: 300e3, getMyStudentProfile: 300e3, getMyClassMonth: 120e3, getMyReport: 120e3, getClassMonths: 300e3, getClassScores: 120e3, getRosterDirectory: 120e3, getRosterStudentReport: 120e3 };
 const apiCache_ = new Map();
 function clearApiCache() { apiCache_.clear(); publicBundleP_ = null; }
 

@@ -9,10 +9,10 @@ function studentInjectStyle(){
   if(document.getElementById('studentPortalStyle'))return;
   const st=document.createElement('style');st.id='studentPortalStyle';
   st.textContent=''
-  +'body.student-mode{overflow:auto !important;}'
+  +'body.student-mode{overflow:hidden !important;}'
   +'#studentMonthlyModal{z-index:2147483000 !important;}'
   /* ໜ້າເຕັມຈໍ ບັງສ່ວນຫົວເວັບທັງໝົດ */
-  +'.student-portal{position:relative !important;min-height:100dvh;z-index:40;display:flex;flex-direction:column;overflow:visible;padding:0 !important;margin:0 !important;max-width:none !important;width:auto !important;box-sizing:border-box;}'
+  +'.student-portal{position:fixed !important;top:0;left:0;right:0;bottom:0;z-index:40;display:flex;flex-direction:column;overflow:hidden;padding:0 !important;margin:0 !important;max-width:none !important;width:auto !important;box-sizing:border-box;}'
   +'.student-portal .student-top{flex:0 0 auto;padding:calc(6px + env(safe-area-inset-top,0px)) 12px 0;box-sizing:border-box;}'
   +'.student-portal .student-head h1{font-size:1.35rem !important;line-height:1.25 !important;margin:0 0 6px !important;}'
   +'.student-portal .student-actions{display:flex;gap:6px !important;margin:0 0 6px !important;flex-wrap:nowrap;}'
@@ -27,9 +27,9 @@ function studentInjectStyle(){
   +'.student-portal.compact .student-head{display:none;}'
   +'.student-portal.compact .student-top{padding-top:calc(4px + env(safe-area-inset-top,0px));}'
   /* ຕາຕະລາງ style-04: ເຕັມຊ້າຍ-ຂວາ-ລຸ່ມ */
-  +'.student-portal #studentMonthTable{display:block;width:100%;padding:0;margin:0;box-sizing:border-box;}'
-  +'.student-portal .class-report-a4-landscape{display:block;max-width:none;width:100%;padding:0 !important;margin:0 !important;border:0 !important;border-radius:0 !important;box-shadow:none !important;background:#fff;box-sizing:border-box;}'
-  +'.student-portal .report-table-wrap{width:100%;overflow-x:auto;overflow-y:visible;-webkit-overflow-scrolling:touch;padding:0 !important;margin:0 !important;border:0 !important;border-radius:0 !important;box-shadow:none !important;background:#fff !important;max-height:none;box-sizing:border-box;}'
+  +'.student-portal #studentMonthTable{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;width:100%;padding:0;margin:0;box-sizing:border-box;}'
+  +'.student-portal .class-report-a4-landscape{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;max-width:none;width:100%;padding:0 !important;margin:0 !important;border:0 !important;border-radius:0 !important;box-shadow:none !important;background:#fff;box-sizing:border-box;}'
+  +'.student-portal .report-table-wrap{flex:1 1 auto;min-height:0;width:100%;overflow:auto;-webkit-overflow-scrolling:touch;padding:0 !important;margin:0 !important;border:0 !important;border-radius:0 !important;box-shadow:none !important;background:#fff !important;max-height:none;box-sizing:border-box;}'
   +'.student-portal .class-scores-table{margin:0 !important;width:max-content !important;min-width:100%;border-collapse:separate;border-spacing:0;table-layout:fixed;}'
   /* ຄໍລຳຊື່ໃຫ້ແຄບລົງ ແຕ່ຫ້າມຕັດຊື່ເປັນສອງແຖວ */
   +'.student-portal .class-scores-table th:first-child,.student-portal .class-scores-table td:first-child{width:130px !important;min-width:130px !important;max-width:130px !important;white-space:nowrap;overflow:hidden;text-overflow:clip;}'
@@ -82,7 +82,7 @@ async function studentMonthlyInit(){
   if (!main) return;
   main.style.display='block';
   studentInjectStyle();document.body.classList.add('student-mode');
-  main.innerHTML='<main class="student-portal"><div class="student-top"><div class="student-head"><h1>ຄະແນນສະເພາະຂອງຂ້ອຍ</h1><div class="student-actions"><button class="student-action" onclick="studentShowUnsignedScores()">📊 ຄະແນນບໍ່ໄດ້ເສັງ</button><button class="student-action" onclick="studentShowProfile()">👤 ຂໍ້ມູນຂອງຂ້ອຍ</button></div><h3 class="student-month-title">ເລືອກເດືອນ</h3></div><div class="student-bar"><button class="student-back" onclick="studentGoBack()" aria-label="ກັບຄືນ">←</button><div id="studentMonthCards" class="month-cards"><span>ກຳລັງໂຫຼດ…</span></div></div></div><div id="studentMonthTable"></div></main>';
+  main.innerHTML='<main class="student-portal"><div class="student-top"><div class="student-head"><h1>ຄະແນນ ແລະ ປຶ້ມຕິດຕາມ</h1><div class="student-actions"><button class="student-action" onclick="studentShowProfile()">👤 ຂໍ້ມູນຂອງຂ້ອຍ</button><button class="student-action" onclick="studentShowMyBook()">📘 ປຶ້ມຕິດຕາມຂອງຂ້ອຍ</button></div><h3 class="student-month-title">ເລືອກເດືອນ</h3></div><div class="student-bar"><button class="student-back" onclick="studentGoBack()" aria-label="ກັບຄືນ">←</button><div id="studentMonthCards" class="month-cards"><span>ກຳລັງໂຫຼດ…</span></div></div></div><div id="studentMonthTable"></div></main>';
   (function(){const c=getComputedStyle(document.body).backgroundColor;const bg=(!c||c==='rgba(0, 0, 0, 0)'||c==='transparent')?'#faf5ea':c;const m=main.querySelector('.student-portal');if(m)m.style.background=bg;})();
   const [monthsRes, profileRes] = await Promise.all([callAPI('getMyMonths',{}), callAPI('getMyStudentProfile',{})]);
   if (!monthsRes || monthsRes.error) { document.getElementById('studentMonthCards').innerHTML='<span>ບໍ່ພົບຂໍ້ມູນເດືອນ</span>'; return; }
@@ -116,15 +116,12 @@ function studentShowProfile(){
   const s=studentProfileCache||{};
   monthlyModal('<h2 style="margin-top:0;">👤 ຂໍ້ມູນຂອງຂ້ອຍ</h2><div class="student-info"><p><b>ຊື່:</b> '+monthlyEsc(s.name || ((s.firstName||'')+' '+(s.lastName||'')))+'</p><p><b>ຫ້ອງ:</b> '+monthlyEsc(s.room)+'</p><p><b>ເພດ:</b> '+monthlyEsc(s.gender)+'</p><p><b>ວັນເກີດ:</b> '+monthlyEsc(s.dob)+'</p><p><b>ພໍ່:</b> '+monthlyEsc(s.father)+'</p><p><b>ແມ່:</b> '+monthlyEsc(s.mother)+'</p><p><b>ເບີໂທ:</b> '+monthlyEsc(s.phone)+'</p><p><b>ທີ່ຢູ່:</b> '+monthlyEsc(s.address)+'</p></div>');
 }
-async function studentShowUnsignedScores(){
-  const overlay=document.getElementById('detailOverlay');
-  if(!overlay) return;
-  overlay.innerHTML='<div class="detail-overlay"><div class="detail-card"><div class="detail-name">ກຳລັງໂຫຼດຄະແນນສະເພາະຂອງຂ້ອຍ…</div></div></div>';
-  const res=await callAPI('getMyReport',{});
-  if(!res||res.error){overlay.innerHTML='<div class="detail-overlay"><div class="detail-card"><div class="detail-name">ບໍ່ສາມາດເປີດຄະແນນ: '+monthlyEsc(typeof legacyReportError==='function'?legacyReportError(res&&res.error):((res&&res.error)||'ERROR'))+'</div><button class="close-btn" onclick="closeDetail()">✕</button></div></div>';return;}
-  legacySelectedReport=res;
-  legacyRenderReport(res,overlay);
-  overlay.querySelectorAll('.official-report-actions,.btn-group').forEach(function(actions){actions.remove();});
+async function studentShowMyBook(){
+  monthlyModal('<div class="student-no-download">ກຳລັງໂຫຼດປຶ້ມຕິດຕາມ…</div>');
+  const res=await callAPI('getMyReport',{});if(!res||res.error){monthlyModal('<div class="student-no-download">ບໍ່ສາມາດເປີດປຶ້ມຕິດຕາມ: '+monthlyEsc(typeof legacyReportError==='function'?legacyReportError(res&&res.error):((res&&res.error)||'ERROR'))+'</div>');return;}
+  const subjects=res.subjects||[], headers=subjects.map(function(item){return '<th>'+monthlyEsc(item.subject||'')+'</th>';}).join('');
+  const rows=(res.columns||[]).map(function(month, index){return '<tr><th>'+monthlyEsc(month)+'</th>'+subjects.map(function(item){return '<td>'+monthlyEsc(item.scores&&item.scores[index]!=null?item.scores[index]:'')+'</td>';}).join('')+'</tr>';}).join('');
+  monthlyModal('<h2 style="margin-top:0;">📘 ປຶ້ມຕິດຕາມຂອງຂ້ອຍ</h2><div class="student-sheet-wrap"><table class="student-sheet"><thead><tr><th>ເດືອນ</th>'+headers+'</tr></thead><tbody>'+rows+'</tbody></table></div>');
 }
 function downloadPDF(filename){const element=document.getElementById('reportCardContent');if(!element||!window.html2pdf)return;html2pdf().set({margin:0.28,filename:(filename||'report')+'.pdf',html2canvas:{scale:2},pagebreak:{mode:['css','legacy'],avoid:['tr']},jsPDF:{unit:'in',format:'a4',orientation:'landscape'}}).from(element).save();}
 
@@ -142,6 +139,7 @@ function teacherScoreClose(popNav) {
 }
 /* ລູກສອນ ← ໃນໜ້າຄະແນນຫ້ອງ: ຖອຍກັບໜ້າຄົ້ນຫາ (ໜ້າກ່ອນໜ້າ) ບໍ່ອອກຈາກລະບົບ */
 function teacherScoreBack() { teacherScoreClose(true); switchTab('search'); }
+function teacherScoreFocusSearch() { teacherScoreClose(true); switchTab('search'); const n = document.getElementById('nameInput'); if (n) setTimeout(function () { try { n.focus(); } catch (e) {} }, 50); }
 async function teacherScoreOpen(room) {
   room = room || teacherScoreRoom || (legacyRooms && legacyRooms[0]) || (currentAccess && currentAccess.room) || '';
   if (!room) return alert('ຍັງບໍ່ມີຫ້ອງຮຽນທີ່ອະນຸຍາດ');
@@ -156,7 +154,8 @@ async function teacherScoreOpen(room) {
   const portal = document.createElement('main');
   portal.id = 'teacherScorePortal'; portal.className = 'student-portal';
   portal.innerHTML = '<div class="student-top"><div class="student-head"><h1>📊 ເບິ່ງຄະແນນ ' + monthlyEsc(room) + '</h1>' + roomSelect + '<h3 class="student-month-title">ເລືອກເດືອນ</h3></div>'
-    + '<div class="student-bar"><button class="student-back" onclick="teacherScoreBack()" aria-label="ກັບຄືນ">←</button><div id="studentMonthCards" class="month-cards"><span class="student-loading" style="padding:0">ກຳລັງໂຫຼດ…</span></div></div></div><div id="studentMonthTable"></div>';
+    + '<div class="student-bar"><button class="student-back" onclick="teacherScoreBack()" aria-label="ກັບຄືນໜ້າຄົ້ນຫາ">←</button><div id="studentMonthCards" class="month-cards"><span class="student-loading" style="padding:0">ກຳລັງໂຫຼດ…</span></div>'
+    + '<button class="teacher-search-btn" onclick="teacherScoreFocusSearch()" aria-label="ຄົ້ນຫານັກຮຽນ">🔍 ຄົ້ນຫາ</button></div></div><div id="studentMonthTable"></div>';
   const c = getComputedStyle(document.body).backgroundColor;
   portal.style.background = (!c || c === 'rgba(0, 0, 0, 0)' || c === 'transparent') ? '#faf5ea' : c;
   host.appendChild(portal);

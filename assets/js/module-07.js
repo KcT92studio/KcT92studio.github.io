@@ -25,7 +25,7 @@
     const groupSpans=[];
     rows.forEach((r,i)=>{ if(i===0 || r[0]!==rows[i-1][0]) { let n=1; while(i+n<rows.length && rows[i+n][0]===r[0]) n++; groupSpans.push([i,n]); } });
     const groupStart=new Map(groupSpans.map(x=>[x[0],x[1]]));
-    const body=rows.map((r,i)=>'<tr>'+ (groupStart.has(i)?'<th rowspan="'+groupStart.get(i)+'">'+esc(r[0])+'</th>':'') + '<th class="official-subject">'+esc(r[1])+'</th><td></td>'+r.slice(3).map(v=>'<td>'+esc(v || '—')+'</td>').join('')+'</tr>').join('');
+    const body=rows.map((r,i)=>'<tr>'+ (groupStart.has(i)?'<th rowspan="'+groupStart.get(i)+'">'+esc(r[0])+'</th>':'') + '<th class="official-subject">'+esc(r[1])+'</th><td></td>'+r.slice(3).map(v=>'<td>'+esc(v)+'</td>').join('')+'</tr>').join('');
     host.innerHTML='<div class="detail-overlay" onclick="if(event.target===this)closeDetail()"><div class="detail-card official-report-card" id="reportCardContent"><div class="detail-header"><div class="detail-name">📘 ປຶ້ມຕິດຕາມນັກຮຽນ</div><button class="close-btn" onclick="closeDetail()">✕</button></div><div class="official-report-actions"><button class="dl-btn" onclick="downloadExcel()">⬇ Excel ຮູບແບບທາງການ</button><button class="dl-btn" onclick="downloadPDF(&quot;official-report&quot;)">⬇ PDF</button></div><div class="official-student-info"><div><b>ຊື່ ແລະ ນາມສະກຸນ:</b> '+esc(officialStudentName(report))+'</div><div><b>ຫ້ອງ:</b> '+esc(st.room||'')+'</div><div><b>ພໍ່:</b> '+esc(st.father||'-')+'</div><div><b>ແມ່:</b> '+esc(st.mother||'-')+'</div></div><div class="report-table-wrap"><table class="official-report-table" id="scoreTable"><thead><tr>'+OFFICIAL_HEADERS.map(h=>'<th>'+esc(h)+'</th>').join('')+'</tr></thead><tbody>'+body+'</tbody></table></div></div></div>';
     window.legacySelectedReport=report;
   }
