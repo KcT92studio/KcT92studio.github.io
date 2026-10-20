@@ -1,5 +1,6 @@
 /* คืนหน้าค้นหาเดิม: ชื่อ–รหัส–บิดา–มารดา โดยข้อมูลถูกส่งจาก Apps Script ตามสิทธิ์ */
 let legacyRooms = [];
+let legacyRoomSummaries = [];
 let legacyStudents = [];
 let legacySelectedReport = null;
 let legacySearchSequence = 0;
@@ -49,7 +50,10 @@ async function init() {
   if (typeof kctUpdateScoreTabLabel === 'function') kctUpdateScoreTabLabel();
   const source = document.getElementById('dataSourceText');
   if (legacyCanBrowse()) {
-    if (source) source.textContent = 'ຄົ້ນຫາຂໍ້ມູນນັກຮຽນຕາມສິດທີ່ໄດ້ຮັບ';
+    if (source) source.textContent = 'ເລືອກຫ້ອງ ເພື່ອເບິ່ງຄະແນນ';
+    document.querySelector('.tabs').style.display = 'none';
+    document.getElementById('searchPanel').style.display = 'none';
+    document.getElementById('roomsPanel').style.display = 'block';
     await legacyLoadRooms();
   } else {
     if (source) source.textContent = 'ສະແດງສະເພາະປຶ້ມຕິດຕາມຂອງທ່ານ';
@@ -61,9 +65,12 @@ async function init() {
 }
 
 async function legacyLoadRooms() {
-  const res = await callAPI('getAccessibleRooms', {});
+  const res = await callAPI('getRoomSummaries', {});
   if (!res || res.error || !Array.isArray(res.rooms)) { document.getElementById('searchList').innerHTML = '<div class="empty">ບໍ່ສາມາດໂຫຼດຫ້ອງຮຽນໄດ້</div>'; return; }
   legacyRooms = res.rooms.filter(Boolean);
+  legacyRoomSummaries = Array.isArray(res.summaries) ? res.summaries : legacyRooms.map(function(room) { return { room: room, total: 0 }; });
+  const totalStudentsLabel = document.getElementById('dataSourceText');
+  if (totalStudentsLabel && Number.isFinite(Number(res.totalStudents))) totalStudentsLabel.textContent = 'ນັກຮຽນທັງໝົດ ' + Number(res.totalStudents) + ' ຄົນ · ' + legacyRooms.length + ' ຫ້ອງ';
   if (typeof kctUpdateScoreTabLabel === 'function') kctUpdateScoreTabLabel();
   const select = document.getElementById('legacyRoomSelect');
   if (select) {
@@ -71,8 +78,8 @@ async function legacyLoadRooms() {
     legacyRooms.forEach(function(room) { const option = document.createElement('option'); option.value = room; option.textContent = room; select.append(option); });
     document.getElementById('secureRoomChooser').style.display = legacyRooms.length > 1 ? 'block' : 'none';
   }
-  if (!legacyRooms.length) document.getElementById('searchList').innerHTML = '<div class="empty">ຍັງບໍ່ມີຫ້ອງຮຽນທີ່ອະນຸຍາດ</div>';
-  else renderSearch();
+  if (!legacyRooms.length) document.getElementById('roomsList').innerHTML = '<div class="empty">ຍັງບໍ່ມີຫ້ອງຮຽນທີ່ອະນຸຍາດ</div>';
+  else renderRooms();
 }
 
 function legacySelectedRoom() { const select = document.getElementById('legacyRoomSelect'); return select && select.value ? select.value : (legacyRooms[0] || ''); }
@@ -163,10 +170,9 @@ async function renderSearch(force) {
 
 async function renderRooms() {
   const list = document.getElementById('roomsList'); list.innerHTML = '<div class="empty kct-loading">ກຳລັງໂຫຼດຫ້ອງ…</div>';
-  const results = await Promise.all(legacyRooms.map(async function(room) { return [room, await callAPI('getRosterDirectory', { room: room, nameQuery: '', idQuery: '', parentQuery: '' })]; }));
-  list.innerHTML = results.map(function(pair) {
-    const room = pair[0], res = pair[1], total = res && !res.error ? (res.totalInRoom || 0) : 0;
-    return '<div class="room-card" onclick="teacherScoreOpen(\'' + legacyEscape(room) + '\')"><div class="room-top"><div class="room-name">ຫ້ອງ ' + legacyEscape(room) + '</div><div style="display:flex;gap:5px;"><button class="dl-btn small" onclick="event.stopPropagation(); showRoomScores(\'' + legacyEscape(room) + '\')">👥</button><button class="dl-btn small" style="background:#167c45;" onclick="event.stopPropagation(); teacherScoreOpen(\'' + legacyEscape(room) + '\')">📊 ເບິ່ງຄະແນນ</button></div></div><div class="room-stats"><div class="stat-item"><span class="dot total"></span>ທັງໝົດ <span class="stat-num">' + total + '</span></div></div></div>';
+  list.innerHTML = legacyRoomSummaries.map(function(item) {
+    const room = item.room, total = Number(item.total || 0);
+    return '<div class="room-card" onclick="teacherScoreOpen(\'' + legacyEscape(room) + '\')"><div class="room-top"><div class="room-name">ຫ້ອງ ' + legacyEscape(room) + '</div><button class="dl-btn small" style="background:#167c45;color:#fff;" onclick="event.stopPropagation(); teacherScoreOpen(\'' + legacyEscape(room) + '\')">📊 ເບິ່ງຄະແນນ</button></div><div class="room-stats"><div class="stat-item"><span class="dot total"></span>ນັກຮຽນ <span class="stat-num">' + total + ' ຄົນ</span></div></div></div>';
   }).join('');
 }
 
