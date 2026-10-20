@@ -23,7 +23,6 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Lao:wght@400;600;700&family=Noto+Serif+Lao:wght@600;700&display=swap">
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2698434787444792" crossorigin="anonymous"></script>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <!-- xlsx / html2pdf ຖືກໂຫຼດແບບ lazy ໃນ module-02.js (ensureExportLibs) ເພື່ອບໍ່ໃຫ້ບລັອກການເປີດໜ້າເວັບ -->
     <!-- required by the embedded student/score app (#appSection) -->
@@ -48,11 +47,19 @@
           <span class="brand-copy"><strong>KcT92studio</strong><span>ໜ້າຂ່າວສານ ໂຮງຮຽນ ມ.ຕ ຫ້ວຍດຳໃໝ່</span></span>
         </a>
         <div class="nav-links"><a href="#news">ຂ່າວສານ</a><a href="#apps">ແອັບ</a><a href="#books">ສື່ການຮຽນ</a><a href="#student-system">ລະບົບນັກຮຽນ</a><a href="#contact">ຕິດຕໍ່</a></div>
-        <div id="headerAuthArea" style="display:flex; align-items:center; gap:0.5rem; flex:0 0 auto;">
+        <div id="headerAuthArea" style="display:flex; align-items:center; gap:0.5rem; flex:0 0 auto; position:relative;">
+          <button id="themeToggle" class="theme-toggle" type="button" onclick="toggleThemePicker()" aria-label="ເລືອກໂທນສີ">🎨</button>
+          <div id="themePicker" class="theme-picker" hidden aria-label="ເລືອກໂທນສີ">
+            <button type="button" class="theme-swatch theme-old" data-theme="old" aria-label="ສີເກົ່າ" onclick="applyTheme('old')"></button>
+            <button type="button" class="theme-swatch theme-blue" data-theme="blue" aria-label="ສີຟ້າ" onclick="applyTheme('blue')"></button>
+            <button type="button" class="theme-swatch theme-green" data-theme="green" aria-label="ສີຂຽວ" onclick="applyTheme('green')"></button>
+            <button type="button" class="theme-swatch theme-purple" data-theme="purple" aria-label="ສີມ່ວງ" onclick="applyTheme('purple')"></button>
+            <button type="button" class="theme-swatch theme-orange" data-theme="orange" aria-label="ສີສົ້ມ" onclick="applyTheme('orange')"></button>
+            <button type="button" class="theme-swatch theme-pink" data-theme="pink" aria-label="ສີບົວ" onclick="applyTheme('pink')"></button>
+          </div>
           <a id="headerLoginBtn" class="login-button" href="#" onclick="openApp(); return false;">ເຂົ້າສູ່ລະບົບ <span aria-hidden="true">→</span></a>
           <span id="headerUserChip" style="display:none; align-items:center; gap:0.5rem; font-size:0.82rem; font-weight:700; color:var(--navy-950);">
             <span id="headerUserLabel"></span>
-            <button id="headerEnterBtn" onclick="openApp()" aria-label="ເຂົ້າລະບົບນັກຮຽນ" style="border:1px solid var(--teal-700); background:var(--teal-700); border-radius:999px; padding:0.35rem 0.8rem; font-size:0.76rem; font-weight:800; color:#fff; cursor:pointer; white-space:nowrap;">📊 ເຂົ້າລະບົບ</button>
             <button onclick="logoutUser()" style="border:1px solid var(--line); background:none; border-radius:999px; padding:0.35rem 0.8rem; font-size:0.76rem; font-weight:800; color:var(--muted); cursor:pointer;">ອອກ</button>
           </span>
         </div>
@@ -298,7 +305,7 @@
     <div class="header-row">
       <div style="position:relative; width:100%;">
         <div class="eyebrow">ລະບົບຂໍ້ມູນນັກຮຽນ</div>
-        <h1>ຄົ້ນຫານັກຮຽນ</h1>
+        <h1>ເລືອກຫ້ອງຮຽນ</h1>
         <div class="sub" id="dataSourceText">ກຳລັງໃຊ້ຂໍ້ມູນຕົວຢ່າງ</div>
         <div id="userBadge" style="font-size:11px; color:#888; margin-top:4px;"></div>
       </div>
@@ -330,7 +337,7 @@
     <div id="roomsList"></div>
   </div>
 
-  <div class="info-box">🔒 ຂໍ້ມູນຖືກດຶງຜ່ານລະບົບທີ່ Admin ກຳນົດສິດ — ຄົ້ນຫາໄດ້ຕາມຊື່, ລະຫັດ, ຊື່ພໍ່ ຫຼື ແມ່</div>
+  <div class="info-box">🔒 ຂໍ້ມູນຫ້ອງ ແລະ ຄະແນນຖືກດຶງຕາມສິດທີ່ Admin ກຳນົດ</div>
 </div>
 
 <div id="detailOverlay"></div>
