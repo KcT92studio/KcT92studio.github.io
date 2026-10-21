@@ -1,57 +1,26 @@
-/* หน้าแรกใช้เว็บตัวที่หนึ่งเป็นเนื้อหาหลัก: ตัดข่าว/แอป/สื่อเดิมออกจากการมองเห็น */
-  #news, #apps, #books { display:none !important; }
-  #apps .section-intro, #appFormPanel { display:none !important; }
-  #apps { padding-top:1rem; }
-  #appsGrid { display:block; }
-  .first-web-full { width:100%; margin:0; }
-  .first-web-full-frame { width:100%; height:calc(100vh - 120px); min-height:720px; overflow:hidden; border:0; background:#fff; position:relative; }
-  .first-web-full-frame iframe { width:100%; height:1500px; border:0; display:block; transform:translateY(-420px); }
-  .first-web-open { display:block; width:max-content; margin:0.5rem auto; padding:0.5rem 1rem; border-radius:8px; background:var(--navy-950); color:#fff; font-weight:800; font-size:0.82rem; text-decoration:none; }
-  .first-web-frame { width:100%; height:420px; overflow:hidden; border:1px solid var(--line); border-radius:12px; background:#fff; position:relative; }
-  .first-web-frame iframe { width:100%; height:980px; border:0; display:block; transform:translateY(-250px); }
-  @media(max-width:800px){ .first-web-frame { height:360px; } .first-web-frame iframe { height:900px; transform:translateY(-220px); } .first-web-full-frame { min-height:620px; height:calc(100vh - 90px); } .first-web-full-frame iframe { height:1300px; transform:translateY(-390px); } }
-  #reportCardContent.report-template { width: 1120px; max-width:none; padding:14px 16px; color:#111; background:#fff; font-family:"Noto Sans Lao","Phetsarath OT",Arial,sans-serif; }
-  #reportCardContent.report-template .detail-header { margin-bottom:6px; border-bottom:1px solid #111; padding-bottom:4px; }
-  #reportCardContent.report-template .detail-name { font-size:16px; font-weight:800; }
-  #reportCardContent.report-template .report-info { display:grid; grid-template-columns:1fr 1fr; gap:3px 18px; font-size:11px; margin:6px 0; padding:6px 8px; border:1px solid #222; }
-  #reportCardContent.report-template .report-table-wrap { overflow:visible; }
-  #reportCardContent.report-template .report-table { width:100%; table-layout:fixed; border-collapse:collapse; font-size:8px; }
-  #reportCardContent.report-template .report-table th, #reportCardContent.report-template .report-table td { border:1px solid #222; padding:2px 1px; line-height:1.15; text-align:center; vertical-align:middle; overflow:hidden; }
-  #reportCardContent.report-template .report-table th:nth-child(1), #reportCardContent.report-template .report-table td:nth-child(1) { width:100px; text-align:left; }
-  #reportCardContent.report-template .report-table th:nth-child(2), #reportCardContent.report-template .report-table td:nth-child(2) { width:145px; text-align:left; }
-  #reportCardContent.report-template .report-table th:nth-child(n+3), #reportCardContent.report-template .report-table td:nth-child(n+3) { width:33px; }
-  #reportCardContent.report-template .report-table th { background:#fff; font-size:8px; font-weight:800; white-space:normal; }
-  #reportCardContent.report-template .report-table tr { break-inside:avoid; page-break-inside:avoid; }
-  
-  /* ຮູບແບບຕາຕະລາງໃຫ້ກົງກັບ module-05 */
-  .class-report-a4-landscape { width:100%; max-width:1120px; box-sizing:border-box; background:#fff; padding:5px; margin:0 auto; }
-  .class-score-fullscreen { overflow:auto; }
-  .class-score-fullscreen .report-table-wrap { width:100%; overflow:auto; -webkit-overflow-scrolling:touch; }
-  .class-scores-table { margin:0 !important; width:100%; border-collapse:collapse; font-size:8px; table-layout:fixed; }
-  .class-scores-table th, .class-scores-table td { border:1px solid #333; padding:2px 1px; text-align:center; vertical-align:middle; overflow:hidden; line-height:1.15; font-weight:600; }
-  .class-scores-table thead th { height:88px; vertical-align:bottom; padding:3px 2px 4px; position:sticky; top:0; z-index:3; background:#f0f4f7; box-shadow:inset 0 -1px 0 #333,inset -1px 0 0 #333; font-weight:800; }
-  /* ເຊື່ອງ 3 ຄໍລຳ (GD, TB, ຊັ້ນ/ຫ້ອງ) ສະເພາະໜ້າຄູ/ແອດມິນ; ໜ້ານັກຮຽນ (student-mode) module-05 ຕັດຄໍລຳອອກຈາກ DOM ແລ້ວ ຫ້າມເຊື່ອງຊ້ຳ */
-  body:not(.student-mode) .class-scores-table thead th:nth-child(2), body:not(.student-mode) .class-scores-table tbody td:nth-child(2),
-  body:not(.student-mode) .class-scores-table thead th:nth-child(3), body:not(.student-mode) .class-scores-table tbody td:nth-child(3),
-  body:not(.student-mode) .class-scores-table thead th:nth-child(4), body:not(.student-mode) .class-scores-table tbody td:nth-child(4) { display:none !important; }
-  /* ລອຍຄໍລຳຊື່ໄວ້; ຄໍລຳຄະແນນເລື່ອນໄດ້ ແລະຫົວຕາຕະລາງຕິດເທິງ */
-  .class-scores-table th:nth-child(1), .class-scores-table td:nth-child(1) { position:sticky; left:0; z-index:2; background:#fff; width:130px; min-width:130px; max-width:130px; text-align:left; white-space:nowrap; padding-left:8px; }
-  .class-scores-table thead th:nth-child(1) { z-index:5; background:#f0f4f7; }
-  /* ຫຼັງເຊື່ອງຄໍລຳ 2-4 ແລ້ວ ວິຊາຄະແນນທີ່ເຫຼືອເລີ່ມຈາກຄໍລຳທີ 5 ຂອງຂໍ້ມູນຕົ້ນສະບັບ */
-  .class-scores-table thead th:nth-child(n+5) { writing-mode:vertical-rl; transform:rotate(180deg); white-space:nowrap; text-align:left; width:25px; min-width:25px; max-width:25px; font-size:7px; }
-  .class-scores-table tbody td:nth-child(n+5) { width:25px; min-width:25px; max-width:25px; white-space:nowrap; font-size:8px; }
-  .class-scores-table tr:nth-child(even) { background:#f9f9f9; }
-  /* ປັບໜ້າຄະແນນລວມຫ້ອງ: ເຕັມຈໍທັງ 4 ດ້ານ + ຊື່ຊິດຊ້າຍ (ໃຊ້ #appSection ເພື່ອຊະນະ .report-table ໃນ style-01) */
-  #appSection .class-score-fullscreen { padding:8px 4px; border-radius:0; width:100vw !important; max-width:100vw !important; height:100vh !important; height:100dvh !important; max-height:100vh !important; max-height:100dvh !important; box-sizing:border-box; display:flex; flex-direction:column; overflow:hidden; }
-  #appSection .class-score-fullscreen .detail-header { padding-bottom:6px; margin-bottom:4px; }
-  #appSection .class-score-fullscreen .month-cards { margin:4px 0 6px !important; padding-bottom:4px; }
-  #appSection .class-score-fullscreen #classMonthTableHost { flex:1 1 auto; min-height:0; max-height:none !important; width:100%; padding:0; border:0; border-radius:0; overflow:auto; -webkit-overflow-scrolling:touch; }
-  #appSection .class-score-fullscreen .class-report-a4-landscape { max-width:none; width:100%; padding:0; margin:0; }
-  #appSection .class-scores-table thead th { height:auto; padding-bottom:4px; }
-  #appSection .class-scores-table th:nth-child(1), #appSection .class-scores-table td:nth-child(1) { text-align:left; padding-left:8px; }
 
-  #reportCardContent.report-template .legacy-score-edit { width:100%; box-sizing:border-box; border:0; background:#fffbe8; text-align:center; font-size:8px; padding:0; min-width:0; }
-  #reportCardContent.report-template .legacy-score-edit[readonly] { background:#fff; color:#111; cursor:default; }
-  #reportCardContent.report-template .report-footer { margin-top:8px; padding-top:4px; border-top:1px solid #111; display:flex; justify-content:space-between; font-size:10px; }
-  @media(max-width:800px){ #reportCardContent.report-template{width:1120px;transform-origin:top left;} .detail-card:has(#reportCardContent.report-template){overflow:auto;max-width:96vw;} }
-  @media print { @page { size:A4 landscape; margin:2cm; } body{background:#fff!important;} .class-report-a4-landscape{width:100%;max-width:none;padding:0;margin:0;} .class-scores-table{font-size:8px;} .class-scores-table thead th{height:88px;} #reportCardContent.report-template{width:100%;padding:0;box-shadow:none;} #reportCardContent.report-template .btn-group,#reportCardContent.report-template .close-btn{display:none!important;} #reportCardContent.report-template .report-table{font-size:7.1px;} #reportCardContent.report-template .report-table th,#reportCardContent.report-template .report-table td{padding:1px;} }
+
+/* ຊ່ອນນາມສະກຸນເລັກນ້ອຍ: ເຫຼືອພື້ນທີ່ໃຫ້ຄະແນນຫຼາຍຂຶ້ນ */
+#appSection .student-portal .class-scores-table th:first-child,
+#appSection .student-portal .class-scores-table td:first-child,
+#appSection .class-score-fullscreen .class-scores-table th:first-child,
+#appSection .class-score-fullscreen .class-scores-table td:first-child {
+  width: 165px !important;
+  min-width: 165px !important;
+  max-width: 165px !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  overflow-wrap: normal !important;
+  word-break: keep-all !important;
+}
+@media (max-width: 600px) {
+  #appSection .student-portal .class-scores-table th:first-child,
+  #appSection .student-portal .class-scores-table td:first-child,
+  #appSection .class-score-fullscreen .class-scores-table th:first-child,
+  #appSection .class-score-fullscreen .class-scores-table td:first-child {
+    width: 145px !important;
+    min-width: 145px !important;
+    max-width: 145px !important;
+  }
+}
