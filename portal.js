@@ -1,6 +1,6 @@
 /* ===== portal.js — ໂຕຮ່ວມຂອງ index.html (ນັກຮຽນ) ແລະ admin.html (ຜູ້ດູແລ) =====
    ແກ້ສອງຄ່ານີ້ຖ້າປ່ຽນ: URL ຂອງ Web app (/exec) ແລະ OAuth Client ID (ໃຊ້ຄ່າເດີມຂອງໂປຣເຈັກເກົ່າໄດ້) */
-const API_URL = "https://script.google.com/macros/s/AKfycbxeN80JjhEdEjpgcEdr6sFIp40hn3q1kxKYHWAw_68zYt5T65DiVqp00qE6Oc-M8-HTmQ/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbx10wFqFdxjoF0ytC8OpaeCI4cFx_viL0BGzwrUeP8F_9HOaOWtMC-AuIdb4geNxNS7Ww/exec";
 const NEWS_URL = "news.html";   // ລິ້ງປຸ່ມ "ຂ່າວສານ" (ໜ້າຂ່າວເກົ່າ ປ່ຽນຊື່ເປັນ news.html)
 const CLIENT_ID = "842445966044-uqi522iqaqmfbc2jg4ks9k9gj9dhj3rp.apps.googleusercontent.com";
 
@@ -20,7 +20,7 @@ function jwt(t) {
 }
 function tokOk() { const j = jwt(TOK); return !!(j.email && j.exp && j.exp * 1000 > Date.now() + 60000); }
 function logout() { try { localStorage.removeItem("kct:tok"); } catch (e) {} TOK = ""; location.reload(); }
-function userBar() { const j = jwt(TOK); return `👤 ${esc(j.name || j.email || "")} <a href="#" onclick="logout();return false">ອອກຈາກລະບົບ</a>`; }
+function userBar() { const j = jwt(TOK); return `<div class="ubar"><span class="un">👤 ${esc(j.name || j.email || "")}</span><button type="button" class="lo" onclick="logout()">🚪 ອອກຈາກລະບົບ</button></div>`; }
 
 /* ເອີ້ນ Apps Script (POST ເທົ່ານັ້ນ; token ບໍ່ຢູ່ໃນ URL) */
 async function api(body) {
@@ -32,21 +32,38 @@ async function api(body) {
   return d;
 }
 
+/* ລາຍຊື່ຫ້ອງ: ເກັບໄວ້ໃນເຄື່ອງ + ໂຫຼດລ່ວງໜ້າ ເພື່ອໃຫ້ຟອມຂຶ້ນທັນທີ */
+let CLS = (() => { try { return JSON.parse(localStorage.getItem("kct:classes") || "null"); } catch (e) { return null; } })();
+let _clsP = null;
+function loadClasses() {
+  if (_clsP) return _clsP;                                             // ຖ້າກຳລັງໂຫຼດຢູ່ ໃຊ້ອັນເດີມ ບໍ່ເອີ້ນຊ້ຳ
+  _clsP = api({ a: "classes" }).then(r => { CLS = r.classes; try { localStorage.setItem("kct:classes", JSON.stringify(CLS)); } catch (e) {} return CLS; })
+    .finally(() => { _clsP = null; });
+  return _clsP;
+}
+/* ປຸກ Apps Script ໃຫ້ຕື່ນ ຕອນຜູ້ໃຊ້ຍັງກຳລັງກົດ Login (ລົດເວລາ cold start) */
+function warmUp() { try { fetch(API_URL, { method: "POST", mode: "no-cors", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: '{"a":"ping"}' }).catch(() => {}); } catch (e) {} }
+
 /* ປຸ່ມ Login ດ້ວຍ Google: ມີ token ທີ່ຍັງບໍ່ໝົດອາຍຸ → ເຂົ້າທັນທີ */
 function needLogin(el, cb) {
   if (tokOk()) { el.hidden = true; cb(); return; }
+  warmUp();
   el.hidden = false;
   el.innerHTML = `<div class="hero">
+    <div class="hl">
     <img class="logo" id="lgHead" src="logo.png" alt="ໂລໂກ" title="ກົດຄ້າງເພື່ອເລືອກສີ">
     <h1>ໂຮງຮຽນ ມ.ຕ ຫ້ວຍດຳໃໝ່</h1>
     <div class="mut">ລະບົບເບິ່ງຄະແນນນັກຮຽນ</div>
+    <blockquote class="quote">“ຄວາມຮູ້ເປັນຊັບທີ່ບໍ່ມີໃຜລັກໄປໄດ້”<br><span class="mut">ຄຳສຸພາສິດ — ຂະຫຍັນຮຽນ ມື້ນີ້ ເພື່ອອະນາຄົດທີ່ດີ</span></blockquote>
+    </div>
+    <div class="hr">
     <div class="what"><b>ເຂົ້າສູ່ລະບົບແລ້ວທ່ານຈະເຫັນ:</b>
       <ul><li>📊 ຄະແນນລາຍເດືອນ ແລະ ພາກຮຽນ ທຸກວິຊາ</li><li>⚠️ ວິຊາທີ່ຍັງບໍ່ໄດ້ເສັງ</li><li>🏅 ຄະແນນລວມ, ສະເລ່ຍ, ອັນດັບ ແລະ ຜົນການເສັງ</li></ul></div>
     <a class="newsbtn" href="${NEWS_URL}">📰 ອ່ານຂ່າວສານໂຮງຮຽນ →</a>
     <p class="invite">ພ້ອມເບິ່ງຜົນການຮຽນຂອງທ່ານແລ້ວບໍ? ກົດເຂົ້າສູ່ລະບົບໄດ້ເລີຍ 👇</p>
     <div id="gbtn" style="display:flex;justify-content:center;min-height:44px"></div>
     <div class="err" id="gerr"></div>
-    <blockquote class="quote">“ຄວາມຮູ້ເປັນຊັບທີ່ບໍ່ມີໃຜລັກໄປໄດ້”<br><span class="mut">ຄຳສຸພາສິດ — ຂະຫຍັນຮຽນ ມື້ນີ້ ເພື່ອອະນາຄົດທີ່ດີ</span></blockquote>
+    </div>
   </div>`;
   let tries = 0;
   (function init() {
@@ -66,6 +83,8 @@ function needLogin(el, cb) {
 /* ປຸ່ມເລືອກ (ເດືອນ/ຫ້ອງ) */
 function chips(el, list, sel, cb) {
   el.innerHTML = list.map(x => `<button type="button" data-m="${esc(x)}" class="${x === sel ? "on" : ""}">${esc(label(x))}</button>`).join("");
+  el.classList.add("scroll");
+  const on = el.querySelector("button.on"); if (on) el.scrollLeft = on.offsetLeft - (el.clientWidth - on.offsetWidth) / 2;
   el.onclick = e => { const b = e.target.closest("button[data-m]"); if (b) cb(b.dataset.m); };
 }
 function label(m) { return /^SEMESTER (I{1,2})$/.test(m) ? "ພາກຮຽນ " + m.slice(9) : /^M\d+$/.test(m) ? "ເດືອນ " + m.slice(1) : m; }
@@ -129,6 +148,22 @@ a{color:var(--kv-acc,var(--acc))}
 .newsbtn{display:inline-block;padding:10px 18px;border-radius:999px;border:1px solid var(--kv-acc,var(--acc));text-decoration:none;font-weight:700}
 .invite{font-weight:700;margin:18px 0 10px}
 .quote{margin:20px 0 0;padding:12px 14px;border-left:4px solid var(--kv-acc,var(--acc));text-align:left;background:var(--kv-hi,var(--hi));border-radius:0 10px 10px 0;font-size:15px}
+.ubar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:2px 0 8px}
+.ubar .un{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;font-size:14px}
+button.lo{flex:0 0 auto;padding:6px 14px;font-size:14px;font-weight:700;border-radius:999px;color:var(--kv-bad,var(--bad));border-color:var(--kv-bad,var(--bad))}
+.chips.scroll{position:relative;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:thin;padding:2px 2px 8px}
+.chips.scroll button{flex:0 0 auto;white-space:nowrap}
+.hero{display:flex;flex-direction:column}.hl,.hr{display:contents}
+.hero .logo{align-self:center}.hero .newsbtn{align-self:center}.hero .quote{order:9}
+.hero .hr>*{order:0}
+@media(min-width:900px){
+  .hero{max-width:960px;flex-direction:row;align-items:center;gap:40px;padding:44px 48px;margin:8vh auto;text-align:left}
+  .hl,.hr{display:flex;flex-direction:column;flex:1 1 0;min-width:0}
+  .hl{align-items:center;text-align:center}
+  .hero .logo{width:132px;height:132px}.hero h1{font-size:28px}
+  .hero .quote{order:0;margin-top:22px}
+  .hr .what{font-size:16px}.hr .newsbtn{align-self:stretch;text-align:center}
+}
 .lg-ico{font-size:44px;cursor:pointer;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 button,select,input{font:inherit;color:var(--kv-ink,var(--ink))}
 button{border:1px solid var(--kv-line,var(--line));background:var(--kv-card,var(--card));border-radius:12px;padding:8px 14px;cursor:pointer}

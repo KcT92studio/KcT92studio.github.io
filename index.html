@@ -25,6 +25,7 @@ async function boot() {
   try {
     const c = localStorage.getItem(CK());                        // ສະແດງຂໍ້ມູນເກົ່າທັນທີ ແລ້ວອັບເດດຫຼັງ
     if (c && !D) { try { start(JSON.parse(c)); } catch (e) {} }
+    const pc = (!D && !c) ? loadClasses().catch(() => null) : null;   // ໂຫຼດລາຍຊື່ຫ້ອງຂະໜານກັນ ບໍ່ລໍຖ້າຕໍ່ກັນ
     const s = await api({ a: "open" });
     if (s.status === "ອະນຸມັດ" && s.months) { localStorage.setItem(CK(), JSON.stringify(s)); return start(s); }
     localStorage.removeItem(CK()); D = null;
@@ -38,8 +39,11 @@ async function boot() {
 }
 function gate(h) { $("#main").hidden = true; $("#gate").hidden = false; $("#gate").innerHTML = `<div class="card">${h}</div>`; }
 async function form() {
-  gate("ກຳລັງໂຫຼດ…");
-  const { classes } = await api({ a: "classes" });
+  let classes = CLS;
+  if (!classes) {
+    gate("ກຳລັງໂຫຼດ…");
+    try { classes = await loadClasses(); } catch (e) { gate(`<p class="err">${esc(e.message)}</p><button id="re">ລອງໃໝ່</button>`); $("#re").onclick = form; return; }
+  } else loadClasses().catch(() => {});                                // ມີຂໍ້ມູນເກົ່າ → ສະແດງທັນທີ ແລ້ວອັບເດດຫຼັງ
   gate(`<h2>ຂໍສິດເບິ່ງຄະແນນ</h2><label>ຫ້ອງ</label><select id="c"><option value="">— ເລືອກຫ້ອງ —</option>${classes.map(c => `<option>${esc(c)}</option>`).join("")}</select>
     <label>ຊື່ ແລະ ນາມສະກຸນຂອງຂ້ອຍ</label><input id="n" maxlength="80" placeholder="ພິມໃຫ້ຖືກຕາມລາຍຊື່ຫ້ອງ" autocomplete="off">
     <p class="mut">ຄູຈະກວດ ແລະ ອະນຸມັດ (ຜູກກັບ Gmail ນີ້). ອະນຸມັດແລ້ວຈະເຫັນຄະແນນຂອງຫ້ອງຕົນເອງເທົ່ານັ້ນ.</p>
