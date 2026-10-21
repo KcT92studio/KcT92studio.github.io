@@ -1,6 +1,6 @@
 /* ===== portal.js — ໂຕຮ່ວມຂອງ index.html (ນັກຮຽນ) ແລະ admin.html (ຜູ້ດູແລ) =====
    ແກ້ສອງຄ່ານີ້ຖ້າປ່ຽນ: URL ຂອງ Web app (/exec) ແລະ OAuth Client ID (ໃຊ້ຄ່າເດີມຂອງໂປຣເຈັກເກົ່າໄດ້) */
-const API_URL = "https://script.google.com/macros/s/AKfycbxeN80JjhEdEjpgcEdr6sFIp40hn3q1kxKYHWAw_68zYt5T65DiVqp00qE6Oc-M8-HTmQ/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbx10wFqFdxjoF0ytC8OpaeCI4cFx_viL0BGzwrUeP8F_9HOaOWtMC-AuIdb4geNxNS7Ww/exec";
 const NEWS_URL = "news.html";   // ລິ້ງປຸ່ມ "ຂ່າວສານ" (ໜ້າຂ່າວເກົ່າ ປ່ຽນຊື່ເປັນ news.html)
 const CLIENT_ID = "842445966044-uqi522iqaqmfbc2jg4ks9k9gj9dhj3rp.apps.googleusercontent.com";
 
@@ -60,7 +60,7 @@ function loadClasses() {
 function warmUp() { try { fetch(API_URL, { method: "POST", mode: "no-cors", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: '{"a":"ping"}' }).catch(() => {}); } catch (e) {} }
 
 /* ປຸ່ມ Login ດ້ວຍ Google: ມີ token ທີ່ຍັງບໍ່ໝົດອາຍຸ → ເຂົ້າທັນທີ */
-function needLogin(el, cb) {
+function needLogin(el, cb, label) {
   if (tokOk()) { el.hidden = true; cb(); return; }
   warmUp();
   el.hidden = false;
@@ -75,7 +75,7 @@ function needLogin(el, cb) {
     <div class="what"><b>ເຂົ້າສູ່ລະບົບແລ້ວທ່ານຈະເຫັນ:</b>
       <ul><li>📊 ຄະແນນລາຍເດືອນ ແລະ ພາກຮຽນ ທຸກວິຊາ</li><li>⚠️ ວິຊາທີ່ຍັງບໍ່ໄດ້ເສັງ</li><li>🏅 ຄະແນນລວມ, ສະເລ່ຍ, ອັນດັບ ແລະ ຜົນການເສັງ</li></ul></div>
     <a class="newsbtn" href="${NEWS_URL}">📰 ອ່ານຂ່າວສານໂຮງຮຽນ →</a>
-    <p class="invite">ພ້ອມເບິ່ງຜົນການຮຽນຂອງທ່ານແລ້ວບໍ? ກົດເຂົ້າສູ່ລະບົບໄດ້ເລີຍ 👇</p>
+    <p class="invite">${label || "👇 ເຂົ້າສູ່ລະບົບເພື່ອເບິ່ງຄະແນນ"}</p>
     <div id="gbtn" style="display:flex;justify-content:center;min-height:44px"></div>
     <div class="err" id="gerr"></div>
     </div>
