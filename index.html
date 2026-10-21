@@ -19,12 +19,14 @@
 const CK = () => "kct:c:" + (jwt(TOK).email || ""); let wired = false;
 let D, month, view = "";            // view: "" | "me" | "miss"
 
+window.onApiRetry = n => { const w = $("#wait"); if (w) w.textContent = "⏳ ເຊີບເວີກຳລັງຕື່ນ… ລອງເຊື່ອມຕໍ່ອີກຄັ້ງ (" + (n + 1) + "/3)"; };
 needLogin($("#gate"), boot);
 async function boot() {
   $("#bar").innerHTML = userBar();
   try {
     const c = localStorage.getItem(CK());                        // ສະແດງຂໍ້ມູນເກົ່າທັນທີ ແລ້ວອັບເດດຫຼັງ
     if (c && !D) { try { start(JSON.parse(c)); } catch (e) {} }
+    if (!D && !c) gate('<p id="wait">⏳ ກຳລັງເຊື່ອມຕໍ່ເຊີບເວີ… ເຂົ້າຄັ້ງທຳອິດອາດໃຊ້ເວລາຈັກໜ້ອຍ</p>');
     const pc = (!D && !c) ? loadClasses().catch(() => null) : null;   // ໂຫຼດລາຍຊື່ຫ້ອງຂະໜານກັນ ບໍ່ລໍຖ້າຕໍ່ກັນ
     const s = await api({ a: "open" });
     if (s.status === "ອະນຸມັດ" && s.months) { localStorage.setItem(CK(), JSON.stringify(s)); return start(s); }

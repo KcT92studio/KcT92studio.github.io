@@ -1,6 +1,6 @@
 /* ===== portal.js — ໂຕຮ່ວມຂອງ index.html (ນັກຮຽນ) ແລະ admin.html (ຜູ້ດູແລ) =====
    ແກ້ສອງຄ່ານີ້ຖ້າປ່ຽນ: URL ຂອງ Web app (/exec) ແລະ OAuth Client ID (ໃຊ້ຄ່າເດີມຂອງໂປຣເຈັກເກົ່າໄດ້) */
-const API_URL = "https://script.google.com/macros/s/AKfycbxeN80JjhEdEjpgcEdr6sFIp40hn3q1kxKYHWAw_68zYt5T65DiVqp00qE6Oc-M8-HTmQ/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbx10wFqFdxjoF0ytC8OpaeCI4cFx_viL0BGzwrUeP8F_9HOaOWtMC-AuIdb4geNxNS7Ww/exec";
 const NEWS_URL = "news.html";   // ລິ້ງປຸ່ມ "ຂ່າວສານ" (ໜ້າຂ່າວເກົ່າ ປ່ຽນຊື່ເປັນ news.html)
 const CLIENT_ID = "842445966044-uqi522iqaqmfbc2jg4ks9k9gj9dhj3rp.apps.googleusercontent.com";
 
@@ -22,14 +22,29 @@ function tokOk() { const j = jwt(TOK); return !!(j.email && j.exp && j.exp * 100
 function logout() { try { localStorage.removeItem("kct:tok"); } catch (e) {} TOK = ""; location.reload(); }
 function userBar() { const j = jwt(TOK); return `<div class="ubar"><span class="un">👤 ${esc(j.name || j.email || "")}</span><button type="button" class="lo" onclick="logout()">🚪 ອອກຈາກລະບົບ</button></div>`; }
 
-/* ເອີ້ນ Apps Script (POST ເທົ່ານັ້ນ; token ບໍ່ຢູ່ໃນ URL) */
-async function api(body) {
+/* ເອີ້ນ Apps Script (POST ເທົ່ານັ້ນ; token ບໍ່ຢູ່ໃນ URL)
+   ເຮັດຊ້ຳອັດຕະໂນມັດ (ສູງສຸດ 3 ເທື່ອ) ເມື່ອເຊີບເວີຍັງ "ຕື່ນບໍ່ເຕັມທີ່" ຫຼື ຕອບຊ້າ — ສະເພາະການອ່ານຂໍ້ມູນ (ບໍ່ເຮັດຊ້ຳການ "ສົ່ງຄຳຂໍ" ເພື່ອບໍ່ໃຫ້ຊ້ຳ) */
+const RETRY_OK = { open: 1, classes: 1, admin: 1 };
+async function apiOnce(body) {
   let r;
-  try { r = await fetch(API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(Object.assign({}, body, { tok: TOK })) }); }
+  const ac = window.AbortController ? new AbortController() : null, to = ac && setTimeout(() => ac.abort(), 20000);
+  try { r = await fetch(API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(Object.assign({}, body, { tok: TOK })), signal: ac ? ac.signal : undefined }); }
   catch (e) { throw new Error("ເຊື່ອມຕໍ່ເຊີບເວີບໍ່ໄດ້ ກະລຸນາລອງໃໝ່"); }
+  finally { if (to) clearTimeout(to); }
   let d; try { d = await r.json(); } catch (e) { throw new Error("ເຊີບເວີຕອບກັບບໍ່ຖືກຮູບແບບ"); }
-  if (!d.ok) { const er = new Error(d.error || "ເກີດຂໍ້ຜິດພາດ"); er.auth = !!d.auth; if (er.auth) { try { localStorage.removeItem("kct:tok"); } catch (e) {} TOK = ""; } throw er; }
+  if (!d.ok) { const er = new Error(d.error || "ເກີດຂໍ້ຜິດພາດ"); er.srv = true; er.auth = !!d.auth; if (er.auth) { try { localStorage.removeItem("kct:tok"); } catch (e) {} TOK = ""; } throw er; }
   return d;
+}
+async function api(body) {
+  const max = RETRY_OK[body.a] ? 3 : 1;
+  for (let i = 1; ; i++) {
+    try { return await apiOnce(body); }
+    catch (e) {
+      if (e.srv || i >= max) throw e;            // ຄຳຕອບຈາກເຊີບເວີ (ເຊັ່ນ ໝົດສິດ) ບໍ່ເຮັດຊ້ຳ
+      if (window.onApiRetry) window.onApiRetry(i);
+      await new Promise(r => setTimeout(r, 700 * i));
+    }
+  }
 }
 
 /* ລາຍຊື່ຫ້ອງ: ເກັບໄວ້ໃນເຄື່ອງ + ໂຫຼດລ່ວງໜ້າ ເພື່ອໃຫ້ຟອມຂຶ້ນທັນທີ */
