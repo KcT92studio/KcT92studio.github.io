@@ -45,74 +45,73 @@
   font-weight: 800 !important;
 }
 
-/* ===== M3: ໃຫ້ຕາຕະລາງຄະແນນໃນເວັບ ຄືກັບໜ້າ ພິມ / PDF (ເສັ້ນບາງ ສີອ່ອນ) ===== */
+/* ===== M3: ຕາຕະລາງຄະແນນ ເສັ້ນບາງ ສີອ່ອນ (ແກ້ຕົວເລກທັບກັນ) ===== */
 #appSection .student-portal .class-scores-table,
 #appSection .class-score-fullscreen .class-scores-table {
   background: #fff !important;
   border: 0 !important;
-  font-variant-numeric: tabular-nums;
+  table-layout: auto !important;
+  width: max-content !important;
 }
-
-/* ເສັ້ນຕາຕະລາງ: ບາງ ສີເທົາອ່ອນ ແທນເສັ້ນດຳໜາ */
 #appSection .student-portal .class-scores-table th,
 #appSection .student-portal .class-scores-table td,
 #appSection .class-score-fullscreen .class-scores-table th,
 #appSection .class-score-fullscreen .class-scores-table td {
   border: 0 !important;
+  outline: 0 !important;
   border-right: 1px solid #dfe3e8 !important;
   border-bottom: 1px solid #dfe3e8 !important;
   background-clip: padding-box;
 }
+#appSection .student-portal .class-scores-table col,
+#appSection .class-score-fullscreen .class-scores-table col { border: 0 !important; }
 
-/* ຕົວເລກຄະແນນ */
+/* ຕົວເລກຄະແນນ: ຂະໜາດພໍດີ ບໍ່ໃຫ້ທັບກັນ */
 #appSection .student-portal .class-scores-table tbody td:not(:first-child),
 #appSection .class-score-fullscreen .class-scores-table tbody td:not(:first-child) {
   background: #fff !important;
   color: #1f2937 !important;
-  font-size: 22px !important;
+  font-size: 17px !important;
   font-weight: 400 !important;
   text-align: center !important;
-  height: 52px;
-  padding: 0 4px !important;
+  white-space: nowrap !important;
+  overflow: visible !important;
+  min-width: 64px !important;
+  width: auto !important;
+  height: 46px;
+  padding: 0 12px !important; /* ຊ່ອງເລກຈຸດ (SUM, AVER) ຈະຂະຫຍາຍຕາມຕົວເລກເອງ */
 }
-
-/* ຄະແນນທີ່ຍັງບໍ່ມີ (ຊ່ອງວ່າງ) ເປັນສີບົວອ່ອນ */
 #appSection .student-portal .class-scores-table tbody td:not(:first-child):empty,
 #appSection .class-score-fullscreen .class-scores-table tbody td:not(:first-child):empty {
   background: #f7e1e1 !important;
 }
 
-/* ຄໍລຳຊື່: ພື້ນຂາວ ຕົວໜັງສືດຳ ບໍ່ຕ້ອງຕົວໜາ */
+/* ຄໍລຳຊື່ */
 #appSection .student-portal .class-scores-table tbody td:first-child,
 #appSection .class-score-fullscreen .class-scores-table tbody td:first-child {
   background: #fff !important;
   color: #1f2937 !important;
   font-weight: 400 !important;
-  font-size: 18px !important;
-  min-width: 170px;
+  font-size: 15px !important;
+  min-width: 140px !important;
+  width: 140px;
   box-shadow: 2px 0 0 #dfe3e8, 4px 0 8px rgba(24,34,49,.06) !important;
 }
 
-/* ຫົວຕາຕະລາງ: ຕົວໜັງສືຕັ້ງ ພື້ນຂາວ ເສັ້ນບາງ */
+/* ຫົວຕາຕະລາງ: ສີສົ້ມອ່ອນ ຕົວຕັ້ງ */
 #appSection .student-portal .class-scores-table thead th,
 #appSection .class-score-fullscreen .class-scores-table thead th {
-  background: #fff !important;
-  color: #1f2937 !important;
-  font-weight: 600 !important;
+  background: #f6c8ab !important;
+  color: #5b2a14 !important;
+  font-weight: 700 !important;
+  font-size: 14px !important;
+  min-width: 64px !important;
   vertical-align: bottom;
 }
 #appSection .student-portal .class-scores-table thead th:first-child,
 #appSection .class-score-fullscreen .class-scores-table thead th:first-child {
   background: #fff !important;
   color: #9b1c1c !important;
+  min-width: 140px !important;
   box-shadow: 2px 0 0 #dfe3e8, 4px 0 8px rgba(24,34,49,.06) !important;
-}
-
-/* ແຖວ S1, S2, ... (ຖ້າມີ) ສີສົ້ມອ່ອນ ຕົວແດງ */
-#appSection .student-portal .class-scores-table thead tr + tr th,
-#appSection .class-score-fullscreen .class-scores-table thead tr + tr th {
-  background: #f7cbb0 !important;
-  color: #c0201b !important;
-  font-weight: 800 !important;
-  text-align: center !important;
 }
