@@ -1,0 +1,184 @@
+/* ===== portal.js — ໂຕຮ່ວມຂອງ index.html (ນັກຮຽນ) ແລະ admin.html (ຜູ້ດູແລ) =====
+   ແກ້ສອງຄ່ານີ້ຖ້າປ່ຽນ: URL ຂອງ Web app (/exec) ແລະ OAuth Client ID (ໃຊ້ຄ່າເດີມຂອງໂປຣເຈັກເກົ່າໄດ້) */
+const API_URL = "https://script.google.com/macros/s/AKfycbx10wFqFdxjoF0ytC8OpaeCI4cFx_viL0BGzwrUeP8F_9HOaOWtMC-AuIdb4geNxNS7Ww/exec";
+const NEWS_URL = "news.html";   // ລິ້ງປຸ່ມ "ຂ່າວສານ" (ໜ້າຂ່າວເກົ່າ ປ່ຽນຊື່ເປັນ news.html)
+const CLIENT_ID = "842445966044-uqi522iqaqmfbc2jg4ks9k9gj9dhj3rp.apps.googleusercontent.com";
+
+/* ສີສັນ + ໂໝດມືດ (ແຜງ 🎨 ແບບດຽວກັບລະບົບປ້ອນຄະແນນ) */
+document.write('<script src="theme.js"><\/script>');
+
+const $ = (s, r) => (r || document).querySelector(s);
+const esc = s => String(s == null ? "" : s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const fmt = v => (v === null || v === undefined || isNaN(v)) ? "" : String(Math.round(v * 100) / 100);
+let TOK = (() => { try { return localStorage.getItem("kct:tok") || ""; } catch (e) { return ""; } })();
+
+function jwt(t) {
+  try {
+    const b = t.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
+    return JSON.parse(decodeURIComponent(atob(b + "=".repeat((4 - b.length % 4) % 4)).split("").map(c => "%" + c.charCodeAt(0).toString(16).padStart(2, "0")).join("")));
+  } catch (e) { return {}; }
+}
+function tokOk() { const j = jwt(TOK); return !!(j.email && j.exp && j.exp * 1000 > Date.now() + 60000); }
+function logout() { try { localStorage.removeItem("kct:tok"); } catch (e) {} TOK = ""; location.reload(); }
+function userBar() { const j = jwt(TOK); return `👤 ${esc(j.name || j.email || "")} <a href="#" onclick="logout();return false">ອອກຈາກລະບົບ</a>`; }
+
+/* ເອີ້ນ Apps Script (POST ເທົ່ານັ້ນ; token ບໍ່ຢູ່ໃນ URL) */
+async function api(body) {
+  let r;
+  try { r = await fetch(API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(Object.assign({}, body, { tok: TOK })) }); }
+  catch (e) { throw new Error("ເຊື່ອມຕໍ່ເຊີບເວີບໍ່ໄດ້ ກະລຸນາລອງໃໝ່"); }
+  let d; try { d = await r.json(); } catch (e) { throw new Error("ເຊີບເວີຕອບກັບບໍ່ຖືກຮູບແບບ"); }
+  if (!d.ok) { const er = new Error(d.error || "ເກີດຂໍ້ຜິດພາດ"); er.auth = !!d.auth; if (er.auth) { try { localStorage.removeItem("kct:tok"); } catch (e) {} TOK = ""; } throw er; }
+  return d;
+}
+
+/* ປຸ່ມ Login ດ້ວຍ Google: ມີ token ທີ່ຍັງບໍ່ໝົດອາຍຸ → ເຂົ້າທັນທີ */
+function needLogin(el, cb) {
+  if (tokOk()) { el.hidden = true; cb(); return; }
+  el.hidden = false;
+  el.innerHTML = `<div class="hero">
+    <img class="logo" id="lgHead" src="logo.png" alt="ໂລໂກ" title="ກົດຄ້າງເພື່ອເລືອກສີ">
+    <h1>ໂຮງຮຽນ ມ.ຕ ຫ້ວຍດຳໃໝ່</h1>
+    <div class="mut">ລະບົບເບິ່ງຄະແນນນັກຮຽນ</div>
+    <div class="what"><b>ເຂົ້າສູ່ລະບົບແລ້ວທ່ານຈະເຫັນ:</b>
+      <ul><li>📊 ຄະແນນລາຍເດືອນ ແລະ ພາກຮຽນ ທຸກວິຊາ</li><li>⚠️ ວິຊາທີ່ຍັງບໍ່ໄດ້ເສັງ</li><li>🏅 ຄະແນນລວມ, ສະເລ່ຍ, ອັນດັບ ແລະ ຜົນການເສັງ</li></ul></div>
+    <a class="newsbtn" href="${NEWS_URL}">📰 ອ່ານຂ່າວສານໂຮງຮຽນ →</a>
+    <p class="invite">ພ້ອມເບິ່ງຜົນການຮຽນຂອງທ່ານແລ້ວບໍ? ກົດເຂົ້າສູ່ລະບົບໄດ້ເລີຍ 👇</p>
+    <div id="gbtn" style="display:flex;justify-content:center;min-height:44px"></div>
+    <div class="err" id="gerr"></div>
+    <blockquote class="quote">“ຄວາມຮູ້ເປັນຊັບທີ່ບໍ່ມີໃຜລັກໄປໄດ້”<br><span class="mut">ຄຳສຸພາສິດ — ຂະຫຍັນຮຽນ ມື້ນີ້ ເພື່ອອະນາຄົດທີ່ດີ</span></blockquote>
+  </div>`;
+  let tries = 0;
+  (function init() {
+    if (window.google && google.accounts && google.accounts.id) {
+      google.accounts.id.initialize({
+        client_id: CLIENT_ID, auto_select: false,
+        callback: r => { TOK = r.credential; try { localStorage.setItem("kct:tok", TOK); } catch (e) {} el.hidden = true; cb(); }
+      });
+      google.accounts.id.renderButton($("#gbtn"), { theme: "outline", size: "large", text: "signin_with" });
+    } else if (++tries < 80) setTimeout(init, 150);
+    else $("#gerr").textContent = "ໂຫຼດປຸ່ມ Google ບໍ່ໄດ້ — ກວດອິນເຕີເນັດ ແລ້ວ Refresh";
+  })();
+  if (window.kctTheme) kctTheme.bindLongPress($("#lgHead"));
+}
+(function () { const s = document.createElement("script"); s.src = "https://accounts.google.com/gsi/client"; s.async = true; document.head.appendChild(s); })();
+
+/* ປຸ່ມເລືອກ (ເດືອນ/ຫ້ອງ) */
+function chips(el, list, sel, cb) {
+  el.innerHTML = list.map(x => `<button type="button" data-m="${esc(x)}" class="${x === sel ? "on" : ""}">${esc(label(x))}</button>`).join("");
+  el.onclick = e => { const b = e.target.closest("button[data-m]"); if (b) cb(b.dataset.m); };
+}
+function label(m) { return /^SEMESTER (I{1,2})$/.test(m) ? "ພາກຮຽນ " + m.slice(9) : /^M\d+$/.test(m) ? "ເດືອນ " + m.slice(1) : m; }
+
+/* ຄະແນນລວມ/ສະເລ່ຍ (ຄິດແບບ Excel: SUM, AVERAGE) */
+function stats(row) {
+  let sum = 0, n = 0, np = 0, u7 = 0, u9 = 0;
+  (row || []).forEach(v => { if (v == null) return; n++; sum += v; if (v < 5) np++; if (v >= 7) u7++; if (v >= 9) u9++; });
+  sum = Math.round(sum * 100) / 100;
+  return { sum: n ? sum : null, avg: n ? sum / n : null, n, np, u7, u9 };
+}
+
+/* ຕາຕະລາງຄະແນນແບບ "ຕາຕະລາງລວມ" ຂອງລະບົບປ້ອນຄະແນນ (scoreM2) */
+function table(D, rows, o) {
+  o = o || {};
+  const N = D.names.length, S = D.subjects.length;
+  const st = rows.map(stats), sums = st.filter(x => x.n).map(x => x.sum);
+  const rank = st.map(x => x.n ? 1 + sums.filter(s => s > x.sum).length : "");
+  const miss = D.subjects.map((_, c) => rows.filter(r => r[c] == null).length);
+  const hv = (t, c) => `<th class="vt ${c || ""}"><div class="vtx">${t}</div></th>`;
+  const head = D.subjects.map(x => hv(esc(x))).join("") + hv("ຄະແນນລວມ") + hv("ຄະແນນສະເລ່ຍ") + hv("ຈຳນວນວິຊາເສັງຕົກ") + hv("ຈຳນວນວິຊາ ≥ 7") + hv("ຈຳນວນວິຊາ ≥ 9") + hv("ອັນດັບທີ່") + hv("ຜົນການເສັງ");
+  const codes = D.subjects.map((_, i) => `<th class="vcode">S${i + 1}</th>`).join("") + ["SUM", "AVER", "no pass", "7up", "9up", "OR", "MK"].map(x => `<th class="vcode">${x}</th>`).join("");
+  const body = rows.map((r, i) => {
+    const s = st[i], tds = D.names.length ? D.subjects.map((_, c) => {
+      const v = r[c];
+      return `<td class="${v == null && o.miss ? "pk" : ""}">${v == null ? "" : `<span class="${v < 5 ? "lowv" : ""}">${fmt(v)}</span>`}</td>`;
+    }).join("") : "";
+    return `<tr class="${i === o.me ? "me" : ""}"><td class="c1">${i + 1}</td><td class="c2">${esc(D.names[i])}</td>${tds}` +
+      `<td class="b">${s.n ? s.sum.toFixed(2) : ""}</td><td class="b">${s.n ? s.avg.toFixed(2) : ""}</td><td class="${s.np ? "lowv" : ""}">${s.n ? s.np : ""}</td><td>${s.n ? s.u7 : ""}</td><td>${s.n ? s.u9 : ""}</td>` +
+      `<td class="b">${rank[i]}</td><td class="b ${s.n ? (s.np ? "lowv" : "okc") : ""}">${s.n ? (s.np ? "ບໍ່ຜ່ານ" : "ຜ່ານ") : ""}</td></tr>`;
+  }).join("");
+  const foot = `<tr><td class="c1"></td><td class="c2">ຂາດ</td>` + miss.map(m => `<td class="${m ? "lowv" : "okc"}">${m ? "ຂາດ " + m : "✓"}</td>`).join("") + `<td colspan="7"></td></tr>`;
+  const w = 38 + 150 + S * 40 + 66 * 2 + 46 * 4 + 70;
+  const colg = "<colgroup>" + [38, 150].concat(D.subjects.map(() => 40), [66, 66, 46, 46, 46, 46, 70]).map(x => `<col style="width:${x}px">`).join("") + "</colgroup>";
+  return `<table class="vt2" style="width:${w}px">${colg}<thead><tr><th class="c1" rowspan="2">#</th><th class="c2" rowspan="2" style="text-align:left">ຊື່ ແລະ ນາມສະກຸນ</th>${head}</tr><tr>${codes}</tr></thead><tbody>${body}</tbody><tfoot>${foot}</tfoot></table>` +
+    `<div class="mut" style="padding:8px 10px">ນັກຮຽນ ${N} ຄົນ · ຄົນທີ່ຍັງຂາດຢ່າງໜ້ອຍ 1 ວິຊາ: ${rows.filter(r => r.some(v => v == null)).length}</div>`;
+}
+
+/* ເຕັມຈໍ (ຕາຕະລາງ) — ໃຊ້ໄດ້ທຸກອຸປະກອນ ລວມ iPhone ທີ່ບໍ່ຮອງຮັບ Fullscreen API */
+function fullscreen(box, btn) {
+  const set = on => { box.classList.toggle("fsmode", on); document.body.classList.toggle("fsbody", on); btn.textContent = on ? "✕ ປິດເຕັມຈໍ" : "⛶ ເຕັມຈໍ"; };
+  btn.onclick = () => set(!box.classList.contains("fsmode"));
+  document.addEventListener("keydown", e => { if (e.key === "Escape") set(false); });
+}
+
+/* ---------- CSS ---------- */
+const css = `
+:root{--bg:#f4f5f7;--card:#fff;--ink:#1d2330;--mute:#667085;--line:#e3e6ec;--acc:#1f6feb;--acc-ink:#fff;--hi:#e8f0fe;--ok:#157f3b;--bad:#c62828}
+*{box-sizing:border-box}
+body{margin:0;background:var(--kv-bg,var(--bg));color:var(--kv-ink,var(--ink));font:16px/1.5 "Noto Sans Lao","Phetsarath OT","Leelawadee UI",system-ui,sans-serif}
+body.fsbody{overflow:hidden}
+.wrap{max-width:1100px;margin:0 auto;padding:14px}
+h1{font-size:22px;margin:4px 0 6px}h2{font-size:15px;margin:14px 0 6px;color:var(--kv-mute,var(--mute))}
+.mut{color:var(--kv-mute,var(--mute));font-size:13px}.err{color:var(--kv-bad,var(--bad));font-size:14px;margin-top:8px}
+a{color:var(--kv-acc,var(--acc))}
+.card{background:var(--kv-card,var(--card));border:1px solid var(--kv-line,var(--line));border-radius:12px;padding:14px;margin:10px 0}
+.hero{max-width:460px;margin:24px auto;text-align:center;background:var(--kv-card,var(--card));border:1px solid var(--kv-line,var(--line));border-radius:18px;padding:24px 20px}
+.hero .logo{width:84px;height:84px;border-radius:50%;object-fit:cover;box-shadow:0 0 0 3px var(--kv-acc,var(--acc));-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;cursor:pointer}
+.hero h1{margin:10px 0 2px}
+.what{text-align:left;background:var(--kv-hi,var(--hi));border-radius:12px;padding:12px 14px;margin:16px 0;font-size:14px}.what ul{margin:6px 0 0;padding-left:20px}
+.newsbtn{display:inline-block;padding:10px 18px;border-radius:999px;border:1px solid var(--kv-acc,var(--acc));text-decoration:none;font-weight:700}
+.invite{font-weight:700;margin:18px 0 10px}
+.quote{margin:20px 0 0;padding:12px 14px;border-left:4px solid var(--kv-acc,var(--acc));text-align:left;background:var(--kv-hi,var(--hi));border-radius:0 10px 10px 0;font-size:15px}
+.lg-ico{font-size:44px;cursor:pointer;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+button,select,input{font:inherit;color:var(--kv-ink,var(--ink))}
+button{border:1px solid var(--kv-line,var(--line));background:var(--kv-card,var(--card));border-radius:12px;padding:8px 14px;cursor:pointer}
+button.on,button.pri{background:var(--kv-acc,var(--acc));color:var(--kv-acc-ink,var(--acc-ink));border-color:var(--kv-acc,var(--acc))}
+button.warn{border-color:#e0a000}button.warn.on{background:#e0a000;color:#fff}
+button:disabled{opacity:.5;cursor:not-allowed}
+select,input{width:100%;padding:9px 10px;border:1px solid var(--kv-line,var(--line));border-radius:10px;background:var(--kv-card,var(--card))}
+label{display:block;font-size:13px;margin:10px 0 4px;color:var(--kv-mute,var(--mute))}
+.row{display:flex;gap:8px;flex-wrap:wrap}.chips{display:flex;gap:6px;flex-wrap:wrap}
+.pill{display:inline-block;background:rgba(224,0,120,.13);color:#c2185b;border-radius:99px;padding:3px 12px;margin:3px 6px 3px 0;font-weight:600}
+.sc{display:flex;justify-content:space-between;padding:7px 0;border-top:1px solid var(--kv-line,var(--line))}.sc .m{color:var(--kv-bad,var(--bad))}
+.tw{overflow:auto;-webkit-overflow-scrolling:touch;max-height:75vh;border:1px solid var(--kv-line,var(--line));border-radius:10px;background:var(--kv-card,var(--card))}
+.tw.fsmode{position:fixed;inset:0;z-index:2147480000;max-height:none;border-radius:0}
+.fsb{margin-top:8px}
+body.fsbody .fsb{position:fixed;right:10px;top:8px;z-index:2147480001}
+.vt2{border-collapse:separate;border-spacing:0;table-layout:fixed;font-size:13px}
+.vt2 th,.vt2 td{border-right:1px solid var(--kv-line,var(--line));border-bottom:1px solid var(--kv-line,var(--line));padding:2px 4px;text-align:center;background:var(--kv-card,var(--card));line-height:1.25}
+.vt2 th{position:sticky;top:0;z-index:2;font-size:12px}
+.vt2 th.vt{height:150px;vertical-align:bottom;padding:4px 2px}
+.vtx{writing-mode:vertical-rl;transform:rotate(180deg);white-space:nowrap;margin:0 auto;font-weight:600}
+.vt2 th.vcode{background:#f8cbad;color:#c00000;font-size:11px;top:150px;padding:2px}
+.vt2 .c1,.vt2 .c2{position:sticky;z-index:1;text-align:left}.vt2 .c1{left:0;color:var(--kv-mute,var(--mute))}
+.vt2 .c2{left:38px;border-right:2px solid var(--kv-line,var(--line));white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vt2 th.c1,.vt2 th.c2{z-index:4}
+.vt2 tfoot td{position:sticky;bottom:0;z-index:2;font-weight:600;border-top:2px solid var(--kv-line,var(--line))}
+.vt2 td.b{font-weight:700}.vt2 .lowv{color:var(--kv-bad,var(--bad));font-weight:700}.vt2 .okc{color:var(--kv-ok,var(--ok))}
+.vt2 td.pk{background:rgba(224,0,120,.22)}
+.vt2 tr.me td{background:var(--kv-hi,var(--hi));font-weight:700}
+@media(max-width:700px){.vt2 .c2{left:28px}}
+#kctThemeFab{position:fixed;right:14px;bottom:16px;z-index:2147482000;width:46px;height:46px;border-radius:50%;border:1px solid var(--kv-line,var(--line));background:var(--kv-card,#fff);font-size:21px;padding:0;box-shadow:0 4px 14px rgba(0,0,0,.22)}
+body.fsbody #kctThemeFab{display:none}
+#kctThemePanel{position:fixed;inset:0;z-index:2147483600;background:rgba(0,0,0,.45);display:flex;align-items:flex-end;justify-content:center}
+#kctThemePanel[hidden]{display:none}
+.kct-th-box{width:min(440px,100%);background:var(--kv-card,#fff);color:var(--kv-ink,#1d2330);border:1px solid var(--kv-line,#e3e6ec);border-radius:18px 18px 0 0;padding:16px 16px 20px;max-height:88vh;overflow:auto}
+@media(min-width:600px){#kctThemePanel{align-items:flex-start;justify-content:flex-end;padding:60px 18px 0}.kct-th-box{border-radius:16px}}
+.kct-th-head{display:flex;justify-content:space-between;align-items:center}.kct-th-x{border:0!important;background:transparent!important}
+#kctThemePanel .thl{font-size:13px;color:var(--kv-mute,#667085);margin:14px 0 8px}
+#kctThemePanel .thsw{display:flex;flex-wrap:wrap;gap:12px}
+#kctThemePanel .thsw button{width:44px;height:44px;border-radius:50%;padding:0;border:3px solid var(--kv-card,#fff);box-shadow:0 0 0 2px var(--kv-line,#e3e6ec)}
+#kctThemePanel .thsw button.on{box-shadow:0 0 0 3px var(--kv-ink,#1d2330)}
+#kctThemePanel .thseg{display:flex;gap:8px;flex-wrap:wrap}#kctThemePanel .thseg button{flex:1;min-width:84px}
+#kctThemePanel .threset{margin-top:16px;width:100%;background:transparent;color:var(--kv-mute,#667085)}
+html[data-kct-bg="dots"] body{background-image:radial-gradient(var(--kv-line) 1.3px,transparent 1.3px);background-size:20px 20px}
+html[data-kct-bg="lines"] body{background-image:repeating-linear-gradient(45deg,var(--kv-line) 0 1px,transparent 1px 16px)}
+`;
+(function () {
+  const st = document.createElement("style"); st.textContent = css; document.head.appendChild(st);
+  document.head.insertAdjacentHTML("beforeend", '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Lao:wght@400;600;700&display=swap">');
+  addEventListener("DOMContentLoaded", () => {
+    const fab = document.createElement("button"); fab.id = "kctThemeFab"; fab.type = "button"; fab.textContent = "🎨"; fab.setAttribute("aria-label", "ເລືອກສີສັນ");
+    fab.onclick = () => window.kctTheme && kctTheme.toggle(); document.body.appendChild(fab);
+  });
+})();

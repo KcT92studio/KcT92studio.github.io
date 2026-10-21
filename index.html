@@ -1,358 +1,84 @@
 <!doctype html>
-<html lang="lo">
-  <head>
-    <meta name="google-site-verification" content="3OvuhLE3PrU1arcMlbOMgz9bdRMy3CKFBAJzy-4pIUg" />
-    
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta
-      name="description"
-      content="ໜ້າຂ່າວສານສຳລັບໂຮງຮຽນ ມ.ຕ ຫ້ວຍດຳໃໝ່"
-    />
-    <title>ໂຮງຮຽນ ມ.ຕ ຫ້ວຍດຳໃໝ່ | ຂ່າວສານ</title>
-    <meta name="google-site-verification" content="_NC5u90rdqe-ZU3cZiXuYhCkouXi819nbn1H1IXDQE8" />
-    <link rel="icon" type="image/png" href="favicon.png">
-    <link rel="apple-touch-icon" href="favicon.png">
-    <meta name="apple-mobile-web-app-title" content="KcT92studio">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="theme-color" content="#16352C">
-    <link rel="preconnect" href="https://script.google.com">
-    <link rel="preconnect" href="https://script.googleusercontent.com" crossorigin>
-    <link rel="preconnect" href="https://accounts.google.com" crossorigin>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Lao:wght@400;600;700&family=Noto+Serif+Lao:wght@600;700&display=swap">
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2698434787444792" crossorigin="anonymous"></script>
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
-    <!-- xlsx / html2pdf ຖືກໂຫຼດແບບ lazy ໃນ module-02.js (ensureExportLibs) ເພື່ອບໍ່ໃຫ້ບລັອກການເປີດໜ້າເວັບ -->
-    <!-- required by the embedded student/score app (#appSection) -->
-    
-    
-    
-    
-    <link rel="stylesheet" href="assets/css/style-01.css">
-  </head>
-  <body>
-    <div class="topbar">
-      <div class="shell topbar-inner">
-        <span class="status"><span class="status-dot"></span> ກະດານຂ່າວສານ ແລະ ຄວາມເຄື່ອນໄຫວປະຈຳໂຮງຮຽນ</span>
-        <a href="#contact">ຕິດຕໍ່ສອບຖາມ</a>
-      </div>
-    </div>
+<html lang="lo"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ຄະແນນຂອງຂ້ອຍ</title></head>
+<body><div class="wrap">
+<h1>ຄະແນນຂອງຂ້ອຍ</h1>
+<div class="mut" id="bar"></div>
+<div id="gate"></div>
+<div id="main" hidden>
+  <div class="row"><button id="bMe">👤 ຂໍ້ມູນຂອງຂ້ອຍ</button><button id="bMiss" class="warn">⚠️ ຄະແນນບໍ່ໄດ້ເສັງ</button></div>
+  <h2>ເລືອກເດືອນ</h2><div class="chips" id="chips"></div>
+  <div id="panel"></div>
+  <div class="mut" id="who" style="margin:6px 0"></div>
+  <div class="tw" id="tw"></div>
+  <button id="fs" class="fsb" hidden>⛶ ເຕັມຈໍ</button>
+</div></div>
+<script src="portal.js"></script>
+<script>
+const CK = () => "kct:c:" + (jwt(TOK).email || ""); let wired = false;
+let D, month, view = "";            // view: "" | "me" | "miss"
 
-    <header>
-      <nav class="shell nav" aria-label="ເມນູຫຼັກ">
-        <a class="brand" href="#home" aria-label="ໜ້າຫຼັກ">
-          <span class="seal"><img src="assets/images/embedded-02.png" alt="KcT92studio"></span>
-          <span class="brand-copy"><strong>KcT92studio</strong><span>ໜ້າຂ່າວສານ ໂຮງຮຽນ ມ.ຕ ຫ້ວຍດຳໃໝ່</span></span>
-        </a>
-        <div class="nav-links"><a href="#news">ຂ່າວສານ</a><a href="#apps">ແອັບ</a><a href="#books">ສື່ການຮຽນ</a><a href="#student-system">ລະບົບນັກຮຽນ</a><a href="#contact">ຕິດຕໍ່</a></div>
-        <div id="headerAuthArea" style="display:flex; align-items:center; gap:0.5rem; flex:0 0 auto;">
-          <a id="headerLoginBtn" class="login-button" href="#" onclick="openApp(); return false;">ເຂົ້າສູ່ລະບົບ <span aria-hidden="true">→</span></a>
-          <span id="headerUserChip" style="display:none; align-items:center; gap:0.5rem; font-size:0.82rem; font-weight:700; color:var(--navy-950);">
-            <span id="headerUserLabel"></span>
-            <button id="headerReopenBtn" onclick="openApp(); return false;" style="border:1px solid var(--navy-900); background:var(--navy-900); color:#fff; border-radius:999px; padding:0.35rem 0.8rem; font-size:0.76rem; font-weight:800; cursor:pointer;">ເຂົ້າຄືນ</button>
-            <button onclick="logoutUser()" style="border:1px solid var(--line); background:none; border-radius:999px; padding:0.35rem 0.8rem; font-size:0.76rem; font-weight:800; color:var(--muted); cursor:pointer;">ອອກ</button>
-          </span>
-        </div>
-      </nav>
-    </header>
-
-    <main id="home">
-      <section class="shell hero reveal">
-        <div class="hero-panel">
-          <div class="hero-copy">
-            <span class="eyebrow">ຂ່າວສານຈາກໂຮງຮຽນ</span>
-            <h1>ຍິນດີຕ້ອນຮັບສູ່ ໜ້າຂ່າວສານໂຮງຮຽນ</h1>
-            <p>ຕິດຕາມປະກາດ, ກິດຈະກຳ, ແອັບພລິເຄຊັນ ແລະ ຂໍ້ມູນນັກຮຽນໄດ້ຈາກໜ້ານີ້ບ່ອນດຽວ.</p>
-            <div class="hero-quicklinks" style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-top:1.1rem;">
-              <a href="https://kct92studio.blogspot.com/" style="padding:0.4rem 0.85rem; border-radius:999px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.22); color:rgba(255,255,255,0.88); font-size:0.76rem; font-weight:700; text-decoration:none;">📰 ຂ່າວສານ</a>
-              <a href="https://kct92studio.blogspot.com/" style="padding:0.4rem 0.85rem; border-radius:999px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.22); color:rgba(255,255,255,0.88); font-size:0.76rem; font-weight:700; text-decoration:none;">📱 ແອັບ</a>
-              <a href="https://kct92studio.blogspot.com/" style="padding:0.4rem 0.85rem; border-radius:999px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.22); color:rgba(255,255,255,0.88); font-size:0.76rem; font-weight:700; text-decoration:none;">📚 ແບບຮຽນ-ສື່ການຮຽນ</a>
-              <a href="https://kct92studio.blogspot.com/" style="padding:0.4rem 0.85rem; border-radius:999px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.22); color:rgba(255,255,255,0.88); font-size:0.76rem; font-weight:700; text-decoration:none;">🎬 ວິດີໂອ-ເພງ</a>
-              <a href="#contact" style="padding:0.4rem 0.85rem; border-radius:999px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.22); color:rgba(255,255,255,0.88); font-size:0.76rem; font-weight:700; text-decoration:none;">✉️ ຕິດຕໍ່</a>
-              <a href="#" onclick="openApp(); return false;" class="hero-login-pill" style="padding:0.4rem 0.85rem; border-radius:999px; background:var(--gold-300); border:1px solid var(--gold-300); color:var(--navy-950); font-size:0.76rem; font-weight:800; text-decoration:none;">👨‍🎓 ເຂົ້າສູ່ລະບົບ</a>
-            </div>
-          </div>
-          <div class="hero-visual" aria-hidden="true"><span class="hero-symbol">✦</span></div>
-        </div>
-      </section>
-
-      <section id="news" class="shell section reveal delay-1">
-        <div class="section-intro">
-          <div><p class="kicker">ອັບເດດຈາກໂຮງຮຽນ</p><h2>ຂ່າວສານລ່າສຸດ</h2></div>
-          <button
-            onclick="toggleNewsForm()"
-            style="padding:0.6rem 1rem; border:1px solid var(--navy-950); border-radius:9px; background:var(--navy-950); color:#fff; font-weight:800; font-size:0.85rem; cursor:pointer;">
-            ✏️ ລົງຂ່າວ (ຄູ/ແອດມິນ)
-          </button>
-        </div>
-
-        <div id="newsFormPanel" style="display:none; margin-bottom:1.4rem; padding:1.2rem; border:1px dashed var(--line); border-radius:14px; background:#fffefa;">
-          <h3 id="newsFormTitle" style="margin:0 0 0.3rem; font-size:1rem;">✏️ ລົງຂ່າວໃໝ່</h3>
-          <p style="margin:0 0 0.8rem; font-size:0.85rem; color:var(--muted);">ຟອມນີ້ໃຊ້ໄດ້ສະເພາະບັນຊີ ຄູອາຈານ/ແອດມິນ ທີ່ Login ແລ້ວເທົ່ານັ້ນ</p>
-          <label style="display:block; font-size:0.8rem; font-weight:700; margin-bottom:0.3rem;">ຫົວຂໍ້ຂ່າວ</label>
-          <input id="newsTitleInput" type="text" placeholder="ຫົວຂໍ້ຂ່າວ" style="width:100%; padding:0.6rem 0.7rem; border:1px solid var(--line); border-radius:8px; margin-bottom:0.7rem; font:inherit;">
-          <label style="display:block; font-size:0.8rem; font-weight:700; margin-bottom:0.3rem;">ເນື້ອຫາ</label>
-          <textarea id="newsBodyInput" placeholder="ເນື້ອຫາຂ່າວ..." style="width:100%; min-height:80px; padding:0.6rem 0.7rem; border:1px solid var(--line); border-radius:8px; margin-bottom:0.7rem; font:inherit; resize:vertical;"></textarea>
-          <label style="display:block; font-size:0.8rem; font-weight:700; margin-bottom:0.3rem;">ຮູບພາບ (ຖ້າມີ) — ເລືອກຈາກເຄື່ອງໄດ້ເລີຍ</label>
-          <input id="newsImageFile" type="file" accept="image/*" onchange="previewNewsImage(event)" style="width:100%; padding:0.55rem 0.4rem; border:1px solid var(--line); border-radius:8px; margin-bottom:0.5rem; font:inherit; font-size:0.85rem;">
-          <div id="newsImagePreviewWrap" style="display:none; margin-bottom:0.9rem;">
-            <img id="newsImagePreview" style="max-width:100%; max-height:160px; border-radius:8px; display:block; margin-bottom:0.4rem;" alt="">
-            <button type="button" onclick="clearNewsImage()" style="background:none; border:none; color:#a3402c; font-size:0.78rem; font-weight:700; cursor:pointer; padding:0;">✕ ເອົາຮູບອອກ</button>
-          </div>
-          <p id="newsImageStatus" style="font-size:0.75rem; color:var(--muted); margin:0 0 0.7rem;"></p>
-          <label style="display:block; font-size:0.8rem; font-weight:700; margin-bottom:0.3rem;">ລິ້ງໄຟລ໌ແນບ PDF (ຖ້າມີ)</label>
-          <input id="newsPdfInput" type="text" placeholder="https://..." style="width:100%; padding:0.6rem 0.7rem; border:1px solid var(--line); border-radius:8px; margin-bottom:0.9rem; font:inherit;">
-          <div style="display:flex; gap:0.7rem; align-items:center;">
-            <button id="newsSubmitBtn" onclick="submitNews()" style="padding:0.65rem 1.2rem; border:none; border-radius:8px; background:var(--gold-300); color:var(--navy-950); font-weight:900; cursor:pointer;">📌 ລົງຂ່າວນີ້</button>
-            <button type="button" onclick="resetNewsForm(); document.getElementById('newsFormPanel').style.display='none';" style="padding:0.65rem 1rem; border:1px solid var(--line); border-radius:8px; background:none; color:var(--muted); font-weight:700; cursor:pointer;">ຍົກເລີກ</button>
-          </div>
-        </div>
-
-        <div class="news-grid" id="newsGrid">
-          <p style="color:var(--muted); grid-column:1/-1;">ກຳລັງໂຫຼດຂ່າວ...</p>
-        </div>
-        <div style="text-align:center; margin-top:1.4rem;">
-          <button id="newsToggleAllBtn" onclick="toggleAllNews()" style="display:none; padding:0.6rem 1.4rem; border:1px solid var(--navy-950); border-radius:999px; background:none; color:var(--navy-950); font-weight:800; font-size:0.85rem; cursor:pointer;">ເບິ່ງຂ່າວທັງໝົດ →</button>
-        </div>
-      </section>
-
-      <section id="apps" class="shell section reveal delay-1">
-        <div class="section-intro">
-          <div><p class="kicker">ດາວໂຫຼດ</p><h2>ແອັບພລິເຄຊັນ</h2></div>
-          <button
-            onclick="toggleAppForm()"
-            style="padding:0.6rem 1rem; border:1px solid var(--navy-950); border-radius:9px; background:var(--navy-950); color:#fff; font-weight:800; font-size:0.85rem; cursor:pointer;">
-            ➕ ເພີ່ມແອັບ (ແອດມິນເທົ່ານັ້ນ)
-          </button>
-        </div>
-
-        <div id="appFormPanel" style="display:none; margin-bottom:1.4rem; padding:1.2rem; border:1px dashed var(--line); border-radius:14px; background:#fffefa;">
-          <h3 id="appFormTitle" style="margin:0 0 0.3rem; font-size:1rem;">➕ ເພີ່ມແອັບໃໝ່</h3>
-          <p style="margin:0 0 0.8rem; font-size:0.85rem; color:var(--muted);">ຟອມນີ້ໃຊ້ໄດ້ສະເພາະບັນຊີ ແອດມິນເທົ່ານັ້ນ</p>
-          <label style="display:block; font-size:0.8rem; font-weight:700; margin-bottom:0.3rem;">ຊື່ແອັບ</label>
-          <input id="appNameInput" type="text" placeholder="ຊື່ແອັບ" style="width:100%; padding:0.6rem 0.7rem; border:1px solid var(--line); border-radius:8px; margin-bottom:0.7rem; font:inherit;">
-          <label style="display:block; font-size:0.8rem; font-weight:700; margin-bottom:0.3rem;">ຄຳອະທິບາຍສັ້ນໆ</label>
-          <input id="appDescInput" type="text" placeholder="ແອັບນີ້ໃຊ້ເຮັດຫຍັງ" style="width:100%; padding:0.6rem 0.7rem; border:1px solid var(--line); border-radius:8px; margin-bottom:0.7rem; font:inherit;">
-          <label style="display:block; font-size:0.8rem; font-weight:700; margin-bottom:0.3rem;">ໄອຄອນແອັບ (ຖ້າມີ) — ເລືອກຈາກເຄື່ອງໄດ້ເລີຍ</label>
-          <input id="appIconFile" type="file" accept="image/*" onchange="previewAppIcon(event)" style="width:100%; padding:0.55rem 0.4rem; border:1px solid var(--line); border-radius:8px; margin-bottom:0.5rem; font:inherit; font-size:0.85rem;">
-          <div id="appIconPreviewWrap" style="display:none; margin-bottom:0.9rem;">
-            <img id="appIconPreview" style="width:64px; height:64px; object-fit:cover; border-radius:12px; display:block; margin-bottom:0.4rem;" alt="">
-            <button type="button" onclick="clearAppIcon()" style="background:none; border:none; color:#a3402c; font-size:0.78rem; font-weight:700; cursor:pointer; padding:0;">✕ ເອົາໄອຄອນອອກ</button>
-          </div>
-          <p id="appIconStatus" style="font-size:0.75rem; color:var(--muted); margin:0 0 0.7rem;"></p>
-          <label style="display:block; font-size:0.8rem; font-weight:700; margin-bottom:0.3rem;">ລິ້ງດາວໂຫຼດ</label>
-          <input id="appDownloadInput" type="text" placeholder="https://..." style="width:100%; padding:0.6rem 0.7rem; border:1px solid var(--line); border-radius:8px; margin-bottom:0.9rem; font:inherit;">
-          <div style="display:flex; gap:0.7rem; align-items:center;">
-            <button id="appSubmitBtn" onclick="submitApp()" style="padding:0.65rem 1.2rem; border:none; border-radius:8px; background:var(--gold-300); color:var(--navy-950); font-weight:900; cursor:pointer;">➕ ເພີ່ມແອັບນີ້</button>
-            <button type="button" onclick="resetAppForm(); document.getElementById('appFormPanel').style.display='none';" style="padding:0.65rem 1rem; border:1px solid var(--line); border-radius:8px; background:none; color:var(--muted); font-weight:700; cursor:pointer;">ຍົກເລີກ</button>
-          </div>
-        </div>
-
-        <div class="news-grid" id="appsGrid">
-          <p style="color:var(--muted); grid-column:1/-1;">ກຳລັງໂຫຼດແອັບ...</p>
-        </div>
-      </section>
-
-      <section id="books" class="shell section reveal delay-1">
-        <div class="section-intro">
-          <div><p class="kicker">ຫ້ອງສະໝຸດ</p><h2>ສື່ການຮຽນ</h2></div>
-          <button
-            onclick="toggleBookForm()"
-            style="padding:0.6rem 1rem; border:1px solid var(--navy-950); border-radius:9px; background:var(--navy-950); color:#fff; font-weight:800; font-size:0.85rem; cursor:pointer;">
-            ➕ ເພີ່ມປື້ມ (ແອດມິນເທົ່ານັ້ນ)
-          </button>
-        </div>
-
-        <div style="display:flex; gap:0.7rem; flex-wrap:wrap; margin-bottom:1.2rem;">
-          <input id="bookFilterGrade" type="text" placeholder="ຄົ້ນຫາຕາມຊັ້ນ (ເຊັ່ນ ມ.1, ມ.4)..." oninput="renderBooksGrid()" style="min-width:180px; padding:0.55rem 0.8rem; border:1px solid var(--line); border-radius:8px; font:inherit; font-size:0.85rem;">
-          <input id="bookFilterSubject" type="text" placeholder="ຄົ້ນຫາຕາມວິຊາ..." oninput="renderBooksGrid()" style="flex:1; min-width:160px; padding:0.55rem 0.8rem; border:1px solid var(--line); border-radius:8px; font:inherit; font-size:0.85rem;">
-        </div>
-
-        <div id="bookFormPanel" style="display:none; margin-bottom:1.4rem; padding:1.2rem; border:1px dashed var(--line); border-radius:14px; background:#fffefa;">
-          <h3 id="bookFormTitle" style="margin:0 0 0.3rem; font-size:1rem;">➕ ເພີ່ມປື້ມໃໝ່</h3>
-          <p style="margin:0 0 0.8rem; font-size:0.85rem; color:var(--muted);">ຟອມນີ້ໃຊ້ໄດ້ສະເພາະບັນຊີ ແອດມິນເທົ່ານັ້ນ</p>
-          <label style="display:block; font-size:0.8rem; font-weight:700; margin-bottom:0.3rem;">ຊື່ປື້ມ / ຫົວຂໍ້</label>
-          <input id="bookTitleInput" type="text" placeholder="ຊື່ປື້ມ" style="width:100%; padding:0.6rem 0.7rem; border:1px solid var(--line); border-radius:8px; margin-bottom:0.7rem; font:inherit;">
-          <div style="display:flex; gap:0.7rem; margin-bottom:0.7rem;">
-            <div style="flex:1;">
-              <label style="display:block; font-size:0.8rem; font-weight:700; margin-bottom:0.3rem;">ຊັ້ນຮຽນ (ປະໄວ້ວ່າງ = ທົ່ວໄປ)</label>
-              <input id="bookGradeInput" type="text" placeholder="ເຊັ່ນ ມ.1, ມ.4, ມ.7" style="width:100%; padding:0.6rem 0.7rem; border:1px solid var(--line); border-radius:8px; font:inherit;">
-            </div>
-            <div style="flex:1;">
-              <label style="display:block; font-size:0.8rem; font-weight:700; margin-bottom:0.3rem;">ວິຊາ</label>
-              <input id="bookSubjectInput" type="text" placeholder="ເຊັ່ນ: ຄະນິດສາດ" style="width:100%; padding:0.6rem 0.7rem; border:1px solid var(--line); border-radius:8px; font:inherit;">
-            </div>
-          </div>
-          <label style="display:block; font-size:0.8rem; font-weight:700; margin-bottom:0.3rem;">ຮູບປົກ (ຖ້າມີ) — ເລືອກຈາກເຄື່ອງໄດ້ເລີຍ</label>
-          <input id="bookCoverFile" type="file" accept="image/*" onchange="previewBookCover(event)" style="width:100%; padding:0.55rem 0.4rem; border:1px solid var(--line); border-radius:8px; margin-bottom:0.5rem; font:inherit; font-size:0.85rem;">
-          <div id="bookCoverPreviewWrap" style="display:none; margin-bottom:0.9rem;">
-            <img id="bookCoverPreview" style="width:80px; height:104px; object-fit:cover; border-radius:8px; display:block; margin-bottom:0.4rem;" alt="">
-            <button type="button" onclick="clearBookCover()" style="background:none; border:none; color:#a3402c; font-size:0.78rem; font-weight:700; cursor:pointer; padding:0;">✕ ເອົາຮູບປົກອອກ</button>
-          </div>
-          <p id="bookCoverStatus" style="font-size:0.75rem; color:var(--muted); margin:0 0 0.7rem;"></p>
-          <label style="display:block; font-size:0.8rem; font-weight:700; margin-bottom:0.3rem;">ລິ້ງໄຟລ໌ PDF</label>
-          <input id="bookPdfInput" type="text" placeholder="https://..." style="width:100%; padding:0.6rem 0.7rem; border:1px solid var(--line); border-radius:8px; margin-bottom:0.9rem; font:inherit;">
-          <div style="display:flex; gap:0.7rem; align-items:center;">
-            <button id="bookSubmitBtn" onclick="submitBook()" style="padding:0.65rem 1.2rem; border:none; border-radius:8px; background:var(--gold-300); color:var(--navy-950); font-weight:900; cursor:pointer;">➕ ເພີ່ມປື້ມນີ້</button>
-            <button type="button" onclick="resetBookForm(); document.getElementById('bookFormPanel').style.display='none';" style="padding:0.65rem 1rem; border:1px solid var(--line); border-radius:8px; background:none; color:var(--muted); font-weight:700; cursor:pointer;">ຍົກເລີກ</button>
-          </div>
-        </div>
-
-        <div class="news-grid" id="booksGrid">
-          <p style="color:var(--muted); grid-column:1/-1;">ກຳລັງໂຫຼດປື້ມ...</p>
-        </div>
-      </section>
-
-      <section id="student-system" class="shell section reveal delay-1">
-        <div class="contact" style="grid-template-columns: 1fr;">
-          <div>
-            <p class="kicker" style="color:#f1d895">ລະບົບນັກຮຽນ · ໂຮງຮຽນ ມ.ຕ ຫ້ວຍດຳໃໝ່</p>
-            <h2>ເຂົ້າລະບົບເພື່ອເບິ່ງຂໍ້ມູນ</h2>
-            <p>ຄະແນນ • ຜົນການຮຽນ • ຂໍ້ມູນນັກຮຽນ ຂອງ <strong>ໂຮງຮຽນ ມ.ຕ ຫ້ວຍດຳໃໝ່</strong> — ຕ້ອງ Login ດ້ວຍ Google ແລະ ໄດ້ຮັບອະນຸມັດສິດຈາກ Admin ກ່ອນ</p>
-            <button onclick="openApp()" style="margin-top:1.2rem; padding:0.75rem 1.6rem; border:none; border-radius:9px; background:var(--gold-300); color:var(--navy-950); font-weight:900; font-size:0.95rem; cursor:pointer;">👨‍🎓 ເຂົ້າລະບົບນັກຮຽນ</button>
-          </div>
-        </div>
-      </section>
-
-      <section id="about" class="shell section reveal delay-1">
-        <div class="about">
-          <div>
-            <p class="kicker">ກ່ຽວກັບເຮົາ</p>
-            <h2>ຮ່ວມສ້າງການຮຽນຮູ້ ແລະ ອະນາຄົດທີ່ດີ</h2>
-            <p>ໂຮງຮຽນ ມ.ຕ ຫ້ວຍດຳໃໝ່ ມຸ່ງໝັ້ນສ້າງສະພາບແວດລ້ອມການຮຽນຮູ້ທີ່ປອດໄພ, ເປັນລະບຽບ ແລະ ເຄົາລົບນັກຮຽນທຸກຄົນ. ໜ້ານີ້ໃຊ້ສຳລັບແຈ້ງຂ່າວສານ ແລະ ສື່ສານກັບຄອບຄົວ.</p>
-          </div>
-          <div class="values"><div class="value"><strong>01</strong><span>ໃສ່ໃຈການຮຽນຮູ້</span></div><div class="value"><strong>02</strong><span>ຮ່ວມມືກັບຄອບຄົວ</span></div><div class="value"><strong>03</strong><span>ພັດທະນານັກຮຽນຮອບດ້ານ</span></div></div>
-        </div>
-      </section>
-
-      <section id="contact" class="shell section reveal delay-2">
-        <div class="contact-mini">
-          <div id="login-note">
-            <p class="kicker" style="color:#f1d895">ຕິດຕໍ່ສອບຖາມ</p>
-            <h2>ມີຄຳຖາມ ຫຼື ຕ້ອງການຕິດຕໍ່?</h2>
-            <p>ພິມຂໍ້ຄວາມຫາໂຮງຮຽນ ມ.ຕ ຫ້ວຍດຳໃໝ່ ໄດ້ທີ່ນີ້ — ຂໍ້ຄວາມຈະຖືກສົ່ງອີເມວແຈ້ງແອດມິນ ແລະ ບັນທຶກໄວ້ໃນລະບົບ.</p>
-          </div>
-          <form class="form" id="contact-form">
-            <label>ຊື່–ນາມສະກຸນ<input required name="name" placeholder="ກອກຊື່ຂອງທ່ານ" /></label>
-            <label>ເບີໂທ ຫຼື ອີເມວ<input required name="contact" placeholder="ວິທີຕິດຕໍ່ກັບທ່ານ" /></label>
-            <label>ຂໍ້ຄວາມ<textarea required name="message" placeholder="ພິມຂໍ້ຄວາມຂອງທ່ານ"></textarea></label>
-            <button type="submit">ສົ່ງຂໍ້ຄວາມ</button>
-            <p class="form-status" id="form-status" aria-live="polite"></p>
-          </form>
-        </div>
-      </section>
-    </main>
-
-    <footer><div class="shell footer-inner"><span>© 2026 ໂຮງຮຽນ ມ.ຕ ຫ້ວຍດຳໃໝ່</span><span>ໜ້າຂ່າວສານສຳລັບເຜີຍແຜ່ຂໍ້ມູນສາທາລະນະ</span></div></footer>
-
-    <script src="assets/js/module-01.js"></script>
-
-<!-- ===================== APP: student/score system (real system, scoped) ===================== -->
-<div id="appSection">
-<div id="appBackBtn"><button onclick="closeApp()">← ກັບຄືນໜ້າຂ່າວສານ</button></div>
-<div id="loginGate" style="max-width:450px; margin:80px auto; padding:0;">
-  <div style="background:linear-gradient(135deg, #2E5E5A 0%, #B8603F 100%); padding:40px 30px; border-radius:16px 16px 0 0; text-align:center; color:white;">
-    <div style="font-size:48px; margin-bottom:12px;">🎓</div>
-    <h2 style="margin:0; font-size:26px; font-weight:700; font-family:'Noto Serif Lao', serif;">ລະບົບຂໍ້ມູນນັກຮຽນ</h2>
-    <p style="margin:8px 0 0; font-size:14px; opacity:0.95; font-weight:700;">ໂຮງຮຽນ ມ.ຕ ຫ້ວຍດຳໃໝ່</p>
-    <p style="margin:2px 0 0; font-size:12px; opacity:0.8;">ຂໍ້ມູນນັກຮຽນ ແລະ ຄະແນນ</p>
-  </div>
-  
-  <div id="loginStep" style="background:white; padding:30px; border-radius:0 0 16px 16px; box-shadow:0 4px 20px rgba(0,0,0,0.1);">
-    <p style="text-align:center; color:#666; margin:0 0 20px; font-size:15px;">ກະລຸນາ Login ດ້ວຍ Google</p>
-    <div id="google-login-btn" style="display:flex; justify-content:center; margin:20px 0; min-height: 40px;"></div>
-    <div id="loginBusy" role="status" aria-live="polite">
-      <div class="kct-spin"></div>
-      <p id="loginBusyText" style="margin:14px 0 0; font-size:15px; font-weight:600; color:#2A2420;">ກຳລັງເຂົ້າສູ່ລະບົບ…</p>
-      <p id="loginBusySub" style="margin:6px 0 0; font-size:12px; color:#888;">ກະລຸນາລໍຖ້າ ຢ່າປິດໜ້ານີ້</p>
-    </div>
-    <div id="debug-error" style="display:none; margin-top:15px; padding:10px; background:#fff5f5; border:1px solid #feb2b2; border-radius:8px; color:#c53030; font-size:12px; text-align:left;"></div>
-  </div>
-  
-  <div id="requestStep" style="display:none; background:white; padding:30px; border-radius:0 0 16px 16px; box-shadow:0 4px 20px rgba(0,0,0,0.1);">
-    <p style="margin:0 0 16px; font-weight:600; color:#2A2420;">📝 ຍັງບໍ່ເຄີຍລົງທະບຽນ — ຂໍສິດເຂົ້າລະບົບ</p>
-    <p style="margin:0 0 12px; font-size:13px; color:#666;">ກະລຸນາລະບຸຫ້ອງຮຽນຂອງທ່ານ:</p>
-    <input id="nameReqInput" autocomplete="name" placeholder="ຊື່–ນາມສະກຸນ" style="width:100%; padding:12px 14px; margin:6px 0 10px; box-sizing:border-box; border:2px solid #D8CEBB; border-radius:8px; font-family:inherit; font-size:14px;">
-    <input id="roomReqInput" placeholder="ຫ້ອງ (ເຊັ່ນ ມ.4)" style="width:100%; padding:12px 14px; margin:6px 0 16px; box-sizing:border-box; border:2px solid #D8CEBB; border-radius:8px; font-family:inherit; font-size:14px;">
-    <button id="requestSubmitBtn" onclick="doAccessRequest()" style="width:100%; padding:12px; background:#2E5E5A; color:white; border:none; border-radius:8px; font-weight:600; cursor:pointer; font-size:14px; transition:background 0.3s;">ສົ່ງຄຳຂໍ</button>
-    <p style="margin:12px 0 0; font-size:12px; color:#999; text-align:center;">ຄຳຂໍຂອງທ່ານຈະຖືກສົ່ງໄປຫາ Admin ເພື່ອກວດສອບ</p>
-  </div>
-  
-  <div id="pendingStep" style="display:none; background:white; padding:30px; border-radius:0 0 16px 16px; box-shadow:0 4px 20px rgba(0,0,0,0.1); text-align:center;">
-    <div style="font-size:48px; margin-bottom:16px; animation:pulse 2s infinite;">⏳</div>
-    <p style="margin:0 0 8px; font-weight:600; color:#2A2420; font-size:16px;">ລໍຖ້າການອະນຸມັດ</p>
-    <p style="margin:0; font-size:13px; color:#666; line-height:1.6;">ບັນຊີຂອງທ່ານກຳລັງລໍຖ້າ Admin ອະນຸມັດ<br>ລະບົບຈະກວດສອບໂດຍອັດຕະໂນມັດທຸກ 3 ວິນາທີ</p>
-    <div style="margin-top:20px; padding:12px; background:#F0EBDD; border-radius:8px; font-size:12px; color:#6b6259;">
-      <p style="margin:0;">💡 ກະລຸນາລໍຖ້າ... ບໍ່ຕ້ອງ Refresh ໜ້າ</p>
-    </div>
-  </div>
-  
-  <link rel="stylesheet" href="assets/css/style-02.css">
-</div>
-
-<div class="wrap" id="mainApp" style="display:none;">
-  <header>
-    <div class="header-row">
-      <div style="position:relative; width:100%;">
-        <div class="eyebrow">ລະບົບຂໍ້ມູນນັກຮຽນ</div>
-        <h1>ຄົ້ນຫານັກຮຽນ</h1>
-        <div class="sub" id="dataSourceText">ກຳລັງໃຊ້ຂໍ້ມູນຕົວຢ່າງ</div>
-        <div id="userBadge" style="font-size:11px; color:#888; margin-top:4px;"></div>
-      </div>
-    </div>
-  </header>
-
-  <div class="tabs">
-    <div class="tab active" id="tabSearch" onclick="switchTab('search')">🔍 ຄົ້ນຫາ</div>
-    <div class="tab" id="tabRooms" onclick="switchTab('rooms')">📊 ເບິ່ງຄະແນນ</div>
-  </div>
-
-  <div id="searchPanel">
-    <div id="secureRoomChooser" style="margin-bottom:12px; display:none;"><label style="font-size:12px; font-weight:800; color:var(--teal-700); display:block; margin-bottom:5px;">🏫 ເລືອກຫ້ອງຮຽນ</label><select id="legacyRoomSelect" onchange="renderSearch()" style="width:100%;"></select></div>
-    <div class="search-grid">
-      <input type="text" id="nameInput" placeholder="ຄົ້ນຫາຕາມຊື່..." oninput="renderSearch()">
-      <input type="text" id="idInput" placeholder="ຄົ້ນຫາຕາມລະຫັດ..." oninput="renderSearch()">
-    </div>
-    <input type="text" id="parentInput" placeholder="ຄົ້ນຫາຕາມຊື່ພໍ່ ຫຼື ແມ່..." oninput="renderSearch()" style="margin-bottom:14px;">
-    
-    <div class="stats-bar" id="searchStats">
-      <div class="stat-item"><span class="dot total"></span>ຫ້ອງ <span class="stat-num" id="roomCountSearch">0</span></div>
-      <div class="stat-item"><span class="dot total"></span>ນັກຮຽນ <span class="stat-num" id="studentCountSearch">0</span></div>
-    </div>
-
-    <div id="searchList"></div>
-  </div>
-
-  <div id="roomsPanel" style="display:none;">
-    <div id="roomsList"></div>
-  </div>
-
-  <div class="info-box">🔒 ຂໍ້ມູນຖືກດຶງຜ່ານລະບົບທີ່ Admin ກຳນົດສິດ — ຄົ້ນຫາໄດ້ຕາມຊື່, ລະຫັດ, ຊື່ພໍ່ ຫຼື ແມ່</div>
-</div>
-
-<div id="detailOverlay"></div>
-
-<script src="assets/js/module-02.js"></script>
-</div>
-
-<script src="assets/js/module-03.js"></script>
-
-  
-<script src="assets/js/module-04.js"></script>
-
-
-
-<link rel="stylesheet" href="assets/css/style-03.css">
-<script src="assets/js/module-05.js"></script>
-
-<link rel="stylesheet" href="assets/css/style-04.css">
-<script src="assets/js/module-06.js"></script>
-
-<script src="assets/js/module-07.js"></script>
-<link rel="stylesheet" href="assets/css/style-05.css">
-
-</body>
-</html>
+needLogin($("#gate"), boot);
+async function boot() {
+  $("#bar").innerHTML = userBar();
+  try {
+    const c = localStorage.getItem(CK());                        // ສະແດງຂໍ້ມູນເກົ່າທັນທີ ແລ້ວອັບເດດຫຼັງ
+    if (c && !D) { try { start(JSON.parse(c)); } catch (e) {} }
+    const s = await api({ a: "open" });
+    if (s.status === "ອະນຸມັດ" && s.months) { localStorage.setItem(CK(), JSON.stringify(s)); return start(s); }
+    localStorage.removeItem(CK()); D = null;
+    if (s.status === "none") return form();
+    gate(s.status === "ປະຕິເສດ"
+      ? `<p class="err">ຄຳຂໍຂອງ ${esc(s.name)} (${esc(s.cls)}) ບໍ່ຖືກອະນຸມັດ. ກະລຸນາຕິດຕໍ່ຄູ.</p><button id="again">ຂໍໃໝ່</button>`
+      : `<p>⏳ ກຳລັງລໍຖ້າຄູອະນຸມັດ: <b>${esc(s.name)}</b> (${esc(s.cls)})</p><div class="row"><button class="pri" id="re">ກວດສະຖານະ</button><button id="again">ປ່ຽນຊື່/ຫ້ອງ</button></div>`);
+    if ($("#re")) $("#re").onclick = boot;
+    if ($("#again")) $("#again").onclick = form;
+  } catch (e) { if (e.auth) return location.reload(); if (D) return; gate(`<p class="err">${esc(e.message)}</p><button id="re">ລອງໃໝ່</button>`); $("#re").onclick = boot; }
+}
+function gate(h) { $("#main").hidden = true; $("#gate").hidden = false; $("#gate").innerHTML = `<div class="card">${h}</div>`; }
+async function form() {
+  gate("ກຳລັງໂຫຼດ…");
+  const { classes } = await api({ a: "classes" });
+  gate(`<h2>ຂໍສິດເບິ່ງຄະແນນ</h2><label>ຫ້ອງ</label><select id="c"><option value="">— ເລືອກຫ້ອງ —</option>${classes.map(c => `<option>${esc(c)}</option>`).join("")}</select>
+    <label>ຊື່ ແລະ ນາມສະກຸນຂອງຂ້ອຍ</label><input id="n" maxlength="80" placeholder="ພິມໃຫ້ຖືກຕາມລາຍຊື່ຫ້ອງ" autocomplete="off">
+    <p class="mut">ຄູຈະກວດ ແລະ ອະນຸມັດ (ຜູກກັບ Gmail ນີ້). ອະນຸມັດແລ້ວຈະເຫັນຄະແນນຂອງຫ້ອງຕົນເອງເທົ່ານັ້ນ.</p>
+    <button class="pri" id="go" disabled>ສົ່ງຄຳຂໍ</button><div class="err" id="e"></div>`);
+  const ok = () => $("#go").disabled = !($("#c").value && $("#n").value.trim());
+  $("#c").onchange = ok; $("#n").oninput = ok;
+  $("#go").onclick = async () => {
+    try { await api({ a: "request", cls: $("#c").value, name: $("#n").value }); boot(); } catch (e) { $("#e").textContent = e.message; }
+  };
+}
+function start(d) {
+  D = d; $("#gate").hidden = true; $("#main").hidden = false; $("#fs").hidden = false;
+  if (!D.months[month]) month = Object.keys(D.months)[0];
+  $("#who").textContent = `${D.cls} · ${D.names[D.me] || ""}`;
+  if (!wired) {
+    wired = true;
+    $("#bMe").onclick = () => { view = view === "me" ? "" : "me"; draw(); };
+    $("#bMiss").onclick = () => { view = view === "miss" ? "" : "miss"; draw(); };
+    fullscreen($("#tw"), $("#fs"));
+  }
+  draw();
+}
+function draw() {
+  const ms = Object.keys(D.months), rows = D.months[month], me = D.me, mine = rows[me] || [];
+  chips($("#chips"), ms, month, m => { month = m; draw(); });
+  $("#bMe").classList.toggle("on", view === "me"); $("#bMiss").classList.toggle("on", view === "miss");
+  let p = "";
+  if (view === "me") {
+    const st = stats(mine);
+    p = `<div class="card"><b>${esc(D.names[me])}</b> · ${esc(month)}` + D.subjects.map((s, i) =>
+      `<div class="sc"><span>${esc(s)}</span>${mine[i] == null ? '<b class="m">ບໍ່ໄດ້ເສັງ</b>' : `<b${mine[i] < 5 ? ' class="m"' : ""}>${fmt(mine[i])}</b>`}</div>`).join("") +
+      `<div class="sc"><span>SUM</span><b>${fmt(st.sum)}</b></div><div class="sc"><span>AVER</span><b>${st.avg == null ? "" : st.avg.toFixed(2)}</b></div></div>`;
+  } else if (view === "miss") {
+    const mi = D.subjects.filter((_, i) => mine[i] == null);
+    p = `<div class="card"><b>ວິຊາທີ່ຂ້ອຍບໍ່ໄດ້ເສັງ · ${esc(month)}</b><br>` +
+      (mi.length ? mi.map(s => `<span class="pill">${esc(s)}</span>`).join("") : '<span style="color:var(--ok);font-weight:700">✓ ເສັງຄົບທຸກວິຊາ</span>') +
+      '<div class="mut" style="margin-top:8px">ຕາຕະລາງລຸ່ມ: ຊ່ອງສີບົວ = ບໍ່ໄດ້ເສັງ, ແຖວລຸ່ມສຸດ = ຈຳນວນຄົນທີ່ຂາດແຕ່ລະວິຊາ</div></div>';
+  }
+  $("#panel").innerHTML = p;
+  $("#tw").innerHTML = table(D, rows, { me, miss: view === "miss" });
+}
+</script></body></html>

@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="lo"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ຜູ້ດູແລ · ຄະແນນທຸກຫ້ອງ</title></head>
+<body><div class="wrap">
+<h1>ຜູ້ດູແລ · ທຸກຫ້ອງ</h1>
+<div class="mut" id="bar"></div>
+<div id="login"></div><div class="err" id="e"></div>
+<div id="main" hidden>
+  <h2>ເລືອກຫ້ອງ</h2><div class="chips" id="cc"></div>
+  <h2>ເລືອກເດືອນ</h2><div class="chips" id="mc"></div>
+  <div class="row"><button id="bMiss" class="warn">⚠️ ສະແດງຄະແນນບໍ່ໄດ້ເສັງ</button></div>
+  <div class="tw" id="tw" style="margin-top:10px"></div>
+  <button id="fs" class="fsb">⛶ ເຕັມຈໍ</button>
+</div></div>
+<script src="portal.js"></script>
+<script>
+let cls, month, D, miss = false;
+needLogin($("#login"), login);
+async function login() {
+  $("#bar").innerHTML = userBar();
+  try {
+    const r = await api({ a: "admin" });
+    $("#login").hidden = true; $("#main").hidden = false; fullscreen($("#tw"), $("#fs"));
+    $("#bMiss").onclick = () => { miss = !miss; $("#bMiss").classList.toggle("on", miss); show(); };
+    chips($("#cc"), r.classes, "", pick);
+    if (r.classes.length) pick(r.classes[0]);
+  } catch (e) { if (e.auth) return location.reload(); $("#login").hidden = true; $("#e").textContent = e.message; }
+}
+async function pick(c) {
+  cls = c; $("#tw").innerHTML = '<p class="mut" style="padding:14px">ກຳລັງໂຫຼດ…</p>';
+  try { D = await api({ a: "admin", cls: c }); month = Object.keys(D.months)[0]; show(); }
+  catch (e) { $("#tw").innerHTML = `<p class="err" style="padding:14px">${esc(e.message)}</p>`; }
+}
+function show() {
+  chips($("#cc"), [...$("#cc").querySelectorAll("button")].map(b => b.dataset.m), cls, pick);
+  chips($("#mc"), Object.keys(D.months), month, m => { month = m; show(); });
+  $("#tw").innerHTML = table(D, D.months[month], { me: -1, miss });
+}
+</script></body></html>
