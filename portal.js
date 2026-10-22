@@ -1,6 +1,6 @@
 /* ===== portal.js — ໂຕຮ່ວມຂອງ index.html (ນັກຮຽນ) ແລະ admin.html (ຜູ້ດູແລ) =====
    ແກ້ສອງຄ່ານີ້ຖ້າປ່ຽນ: URL ຂອງ Web app (/exec) ແລະ OAuth Client ID (ໃຊ້ຄ່າເດີມຂອງໂປຣເຈັກເກົ່າໄດ້) */
-const API_URL = "https://script.google.com/macros/s/AKfycbxeN80JjhEdEjpgcEdr6sFIp40hn3q1kxKYHWAw_68zYt5T65DiVqp00qE6Oc-M8-HTmQ/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbx10wFqFdxjoF0ytC8OpaeCI4cFx_viL0BGzwrUeP8F_9HOaOWtMC-AuIdb4geNxNS7Ww/exec";
 const NEWS_URL = "news.html";   // ລິ້ງປຸ່ມ "ຂ່າວສານ" (ໜ້າຂ່າວເກົ່າ ປ່ຽນຊື່ເປັນ news.html)
 const CLIENT_ID = "842445966044-uqi522iqaqmfbc2jg4ks9k9gj9dhj3rp.apps.googleusercontent.com";
 
@@ -19,7 +19,8 @@ function jwt(t) {
   } catch (e) { return {}; }
 }
 function tokOk() { const j = jwt(TOK); return !!(j.email && j.exp && j.exp * 1000 > Date.now() + 60000); }
-function logout() { try { localStorage.removeItem("kct:tok"); } catch (e) {} TOK = ""; location.reload(); }
+function logout() { try { if (tokOk()) localStorage.setItem("kct:last", JSON.stringify({ t: TOK, at: Date.now() })); localStorage.removeItem("kct:tok"); } catch (e) {} TOK = ""; location.reload(); }
+const QUICK_MIN = 5;   // ອອກຈາກລະບົບແລ້ວ ກົດເຂົ້າໃໝ່ພາຍໃນຈັກນາທີ ເຂົ້າໄດ້ທັນທີ
 function userBar() { const j = jwt(TOK); return `<div class="ubar"><span class="un">👤 ${esc(j.name || j.email || "")}</span><button type="button" class="lo" onclick="logout()">🚪 ອອກຈາກລະບົບ</button></div>`; }
 
 /* ເອີ້ນ Apps Script (POST ເທົ່ານັ້ນ; token ບໍ່ຢູ່ໃນ URL)
@@ -76,16 +77,24 @@ function needLogin(el, cb, label) {
       <ul><li>📊 ຄະແນນລາຍເດືອນ ແລະ ພາກຮຽນ ທຸກວິຊາ</li><li>⚠️ ວິຊາທີ່ຍັງບໍ່ໄດ້ເສັງ</li><li>🏅 ຄະແນນລວມ, ສະເລ່ຍ, ອັນດັບ ແລະ ຜົນການເສັງ</li></ul></div>
     <a class="newsbtn" href="${NEWS_URL}">📰 ອ່ານຂ່າວສານໂຮງຮຽນ →</a>
     <p class="invite">👇 ກົດປຸ່ມລຸ່ມນີ້ ແລ້ວເລືອກ Gmail ຂອງທ່ານ</p>
+    <div id="quick"></div>
     <div class="gwrap" id="gwrap"><div class="gfake">🔐 ${label || "ເຂົ້າສູ່ລະບົບ"}</div><div class="gover" id="gbtn"></div></div>
     <div class="err" id="gerr"></div>
     </div>
   </div>`;
+  try {
+    const last = JSON.parse(localStorage.getItem("kct:last") || "null"), j = last && jwt(last.t);
+    if (last && j.exp * 1000 > Date.now() + 60000 && Date.now() - last.at < QUICK_MIN * 60000) {
+      $("#quick").innerHTML = `<button type="button" class="pri quickb" id="qre">↩️ ເຂົ້າໃໝ່ທັນທີ · ${esc(j.name || j.email)}</button><div class="mut" style="margin:6px 0 10px">ຫຼື ເລືອກ Gmail ອື່ນດ້ວຍປຸ່ມລຸ່ມນີ້</div>`;
+      $("#qre").onclick = () => { TOK = last.t; try { localStorage.setItem("kct:tok", TOK); localStorage.removeItem("kct:last"); } catch (e) {} el.hidden = true; cb(); };
+    } else localStorage.removeItem("kct:last");
+  } catch (e) {}
   let tries = 0;
   (function init() {
     if (window.google && google.accounts && google.accounts.id) {
       google.accounts.id.initialize({
         client_id: CLIENT_ID, auto_select: false,
-        callback: r => { TOK = r.credential; try { localStorage.setItem("kct:tok", TOK); } catch (e) {} el.hidden = true; cb(); }
+        callback: r => { TOK = r.credential; try { localStorage.setItem("kct:tok", TOK); localStorage.removeItem("kct:last"); } catch (e) {} el.hidden = true; cb(); }
       });
       google.accounts.id.renderButton($("#gbtn"), { theme: "outline", size: "large", text: "signin_with", width: Math.min(400, Math.max(200, Math.round($("#gwrap").clientWidth || 300))) });
     } else if (++tries < 80) setTimeout(init, 150);
@@ -132,15 +141,16 @@ function table(D, rows, o) {
       `<td class="b">${rank[i]}</td><td class="b ${s.n ? (s.np ? "lowv" : "okc") : ""}">${s.n ? (s.np ? "ບໍ່ຜ່ານ" : "ຜ່ານ") : ""}</td></tr>`;
   }).join("");
   const foot = `<tr><td class="c1"></td><td class="c2">ຂາດ</td>` + miss.map(m => `<td class="${m ? "lowv" : "okc"}">${m ? "ຂາດ " + m : "✓"}</td>`).join("") + `<td colspan="7"></td></tr>`;
-  const w = 38 + 150 + S * 40 + 66 * 2 + 46 * 4 + 70;
-  const colg = "<colgroup>" + [38, 150].concat(D.subjects.map(() => 40), [66, 66, 46, 46, 46, 46, 70]).map(x => `<col style="width:${x}px">`).join("") + "</colgroup>";
+  const c1W = N >= 100 ? 42 : 34, c2W = (window.innerWidth || 400) < 700 ? 104 : 150;
+  const w = c1W + c2W + S * 40 + 66 * 2 + 46 * 4 + 70;
+  const colg = "<colgroup>" + [c1W, c2W].concat(D.subjects.map(() => 40), [66, 66, 46, 46, 46, 46, 70]).map(x => `<col style="width:${x}px">`).join("") + "</colgroup>";
   return `<table class="vt2" style="width:${w}px">${colg}<thead><tr><th class="c1" rowspan="2">#</th><th class="c2" rowspan="2" style="text-align:left">ຊື່ ແລະ ນາມສະກຸນ</th>${head}</tr><tr>${codes}</tr></thead><tbody>${body}</tbody><tfoot>${foot}</tfoot></table>` +
     `<div class="mut" style="padding:8px 10px">ນັກຮຽນ ${N} ຄົນ · ຄົນທີ່ຍັງຂາດຢ່າງໜ້ອຍ 1 ວິຊາ: ${rows.filter(r => r.some(v => v == null)).length}</div>`;
 }
 
 /* ເຕັມຈໍ (ຕາຕະລາງ) — ໃຊ້ໄດ້ທຸກອຸປະກອນ ລວມ iPhone ທີ່ບໍ່ຮອງຮັບ Fullscreen API */
 function fullscreen(box, btn) {
-  const set = on => { box.classList.toggle("fsmode", on); document.body.classList.toggle("fsbody", on); btn.textContent = on ? "✕ ປິດເຕັມຈໍ" : "⛶ ເຕັມຈໍ"; };
+  const set = on => { box.classList.toggle("fsmode", on); document.body.classList.toggle("fsbody", on); btn.textContent = on ? "✕ ປິດເຕັມຈໍ" : "⛶ ເບິ່ງຕາຕະລາງເຕັມຈໍ"; };
   btn.onclick = () => set(!box.classList.contains("fsmode"));
   document.addEventListener("keydown", e => { if (e.key === "Escape") set(false); });
 }
@@ -197,6 +207,7 @@ label{display:block;font-size:13px;margin:10px 0 4px;color:var(--kv-mute,var(--m
 .sc{display:flex;justify-content:space-between;padding:7px 0;border-top:1px solid var(--kv-line,var(--line))}.sc .m{color:var(--kv-bad,var(--bad))}
 .tw{overflow-x:auto;overflow-y:visible;-webkit-overflow-scrolling:touch;border:1px solid var(--kv-line,var(--line));border-radius:10px;background:var(--kv-card,var(--card))}
 .tw.fsmode{position:fixed;inset:0;z-index:2147480000;overflow:auto;border-radius:0}
+.quickb{display:block;width:100%;max-width:340px;margin:6px auto;padding:13px;font-size:16px;font-weight:700;border-radius:14px}
 .fsb{display:block;width:100%;margin:10px 0;padding:14px;font-size:17px;font-weight:700;background:var(--kv-acc,var(--acc));color:var(--kv-acc-ink,var(--acc-ink));border-color:var(--kv-acc,var(--acc));box-shadow:0 3px 10px rgba(0,0,0,.18)}
 body.fsbody .fsb{position:fixed;right:10px;top:8px;width:auto;margin:0;padding:8px 14px;font-size:15px;z-index:2147480001}
 .vt2{border-collapse:separate;border-spacing:0;table-layout:fixed;font-size:13px}
@@ -205,14 +216,13 @@ body.fsbody .fsb{position:fixed;right:10px;top:8px;width:auto;margin:0;padding:8
 .vt2 th.vt{height:150px;vertical-align:bottom;padding:4px 2px}
 .vtx{writing-mode:vertical-rl;transform:rotate(180deg);white-space:nowrap;margin:0 auto;font-weight:600}
 .vt2 th.vcode{background:#f8cbad;color:#c00000;font-size:11px;top:150px;padding:2px}
-.vt2 .c1,.vt2 .c2{position:sticky;z-index:1;text-align:left}.vt2 .c1{left:0;color:var(--kv-mute,var(--mute))}
-.vt2 .c2{left:38px;border-right:2px solid var(--kv-line,var(--line));white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vt2 .c1,.vt2 .c2{position:sticky;z-index:1;text-align:left}.vt2 .c1{left:auto;color:var(--kv-mute,var(--mute))}.vt2 tbody td.c1{position:static}
+.vt2 .c2{left:0;border-right:2px solid var(--kv-line,var(--line));white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .vt2 th.c1,.vt2 th.c2{z-index:4}
 .vt2 tfoot td{position:sticky;bottom:0;z-index:2;font-weight:600;border-top:2px solid var(--kv-line,var(--line))}
 .vt2 td.b{font-weight:700}.vt2 .lowv{color:var(--kv-bad,var(--bad));font-weight:700}.vt2 .okc{color:var(--kv-ok,var(--ok))}
 .vt2 td.pk{background:rgba(224,0,120,.22)}
 .vt2 tr.me td{background:var(--kv-hi,var(--hi));font-weight:700}
-@media(max-width:700px){.vt2 .c2{left:28px}}
 #kctThemeFab{position:fixed;right:14px;bottom:16px;z-index:2147482000;width:46px;height:46px;border-radius:50%;border:1px solid var(--kv-line,var(--line));background:var(--kv-card,#fff);font-size:21px;padding:0;box-shadow:0 4px 14px rgba(0,0,0,.22)}
 body.fsbody #kctThemeFab{display:none}
 #kctThemePanel{position:fixed;inset:0;z-index:2147483600;background:rgba(0,0,0,.45);display:flex;align-items:flex-end;justify-content:center}
