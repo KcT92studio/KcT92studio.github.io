@@ -1,6 +1,6 @@
 /* ===== portal.js — ໂຕຮ່ວມຂອງ index.html (ນັກຮຽນ) ແລະ admin.html (ຜູ້ດູແລ) =====
    ແກ້ສອງຄ່ານີ້ຖ້າປ່ຽນ: URL ຂອງ Web app (/exec) ແລະ OAuth Client ID (ໃຊ້ຄ່າເດີມຂອງໂປຣເຈັກເກົ່າໄດ້) */
-const API_URL = "https://script.google.com/macros/s/AKfycbxeN80JjhEdEjpgcEdr6sFIp40hn3q1kxKYHWAw_68zYt5T65DiVqp00qE6Oc-M8-HTmQ/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbx10wFqFdxjoF0ytC8OpaeCI4cFx_viL0BGzwrUeP8F_9HOaOWtMC-AuIdb4geNxNS7Ww/exec";
 const NEWS_URL = "news.html";   // ລິ້ງປຸ່ມ "ຂ່າວສານ" (ໜ້າຂ່າວເກົ່າ ປ່ຽນຊື່ເປັນ news.html)
 const CLIENT_ID = "842445966044-uqi522iqaqmfbc2jg4ks9k9gj9dhj3rp.apps.googleusercontent.com";
 
@@ -75,8 +75,8 @@ function needLogin(el, cb, label) {
     <div class="what"><b>ເຂົ້າສູ່ລະບົບແລ້ວທ່ານຈະເຫັນ:</b>
       <ul><li>📊 ຄະແນນລາຍເດືອນ ແລະ ພາກຮຽນ ທຸກວິຊາ</li><li>⚠️ ວິຊາທີ່ຍັງບໍ່ໄດ້ເສັງ</li><li>🏅 ຄະແນນລວມ, ສະເລ່ຍ, ອັນດັບ ແລະ ຜົນການເສັງ</li></ul></div>
     <a class="newsbtn" href="${NEWS_URL}">📰 ອ່ານຂ່າວສານໂຮງຮຽນ →</a>
-    <p class="invite">${label || "👇 ເຂົ້າສູ່ລະບົບເພື່ອເບິ່ງຄະແນນ"}</p>
-    <div id="gbtn" style="display:flex;justify-content:center;min-height:44px"></div>
+    <p class="invite">👇 ກົດປຸ່ມລຸ່ມນີ້ ແລ້ວເລືອກ Gmail ຂອງທ່ານ</p>
+    <div class="gwrap" id="gwrap"><div class="gfake">🔐 ${label || "ເຂົ້າສູ່ລະບົບ"}</div><div class="gover" id="gbtn"></div></div>
     <div class="err" id="gerr"></div>
     </div>
   </div>`;
@@ -87,7 +87,7 @@ function needLogin(el, cb, label) {
         client_id: CLIENT_ID, auto_select: false,
         callback: r => { TOK = r.credential; try { localStorage.setItem("kct:tok", TOK); } catch (e) {} el.hidden = true; cb(); }
       });
-      google.accounts.id.renderButton($("#gbtn"), { theme: "outline", size: "large", text: "signin_with" });
+      google.accounts.id.renderButton($("#gbtn"), { theme: "outline", size: "large", text: "signin_with", width: Math.min(400, Math.max(200, Math.round($("#gwrap").clientWidth || 300))) });
     } else if (++tries < 80) setTimeout(init, 150);
     else $("#gerr").textContent = "ໂຫຼດປຸ່ມ Google ບໍ່ໄດ້ — ກວດອິນເຕີເນັດ ແລ້ວ Refresh";
   })();
@@ -179,6 +179,11 @@ button.lo{flex:0 0 auto;padding:6px 14px;font-size:14px;font-weight:700;border-r
   .hero .quote{order:0;margin-top:22px}
   .hr .what{font-size:16px}.hr .newsbtn{align-self:stretch;text-align:center}
 }
+.gwrap{position:relative;width:100%;max-width:340px;height:54px;margin:6px auto 4px}
+.gfake{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;border-radius:14px;font-weight:700;font-size:18px;background:var(--kv-acc,var(--acc));color:var(--kv-acc-ink,var(--acc-ink));box-shadow:0 4px 12px rgba(0,0,0,.18)}
+.gover{position:absolute;left:0;top:0;width:100%;height:40px;transform:scaleY(1.35);transform-origin:0 0;opacity:.01;overflow:hidden;z-index:2}
+#kctDeskBar{position:fixed;left:0;right:0;bottom:0;z-index:2147483000;background:#fff3cd;color:#5c4400;border-top:3px solid #e0a000;display:flex;gap:10px;align-items:flex-start;box-shadow:0 -4px 16px rgba(0,0,0,.2)}
+#kctDeskBar b{display:block}#kctDeskBar button{flex:0 0 auto;border:0;background:transparent;font-size:1.4em;line-height:1;padding:0 .2em;color:#5c4400}
 .lg-ico{font-size:44px;cursor:pointer;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 button,select,input{font:inherit;color:var(--kv-ink,var(--ink))}
 button{border:1px solid var(--kv-line,var(--line));background:var(--kv-card,var(--card));border-radius:12px;padding:8px 14px;cursor:pointer}
@@ -190,10 +195,10 @@ label{display:block;font-size:13px;margin:10px 0 4px;color:var(--kv-mute,var(--m
 .row{display:flex;gap:8px;flex-wrap:wrap}.chips{display:flex;gap:6px;flex-wrap:wrap}
 .pill{display:inline-block;background:rgba(224,0,120,.13);color:#c2185b;border-radius:99px;padding:3px 12px;margin:3px 6px 3px 0;font-weight:600}
 .sc{display:flex;justify-content:space-between;padding:7px 0;border-top:1px solid var(--kv-line,var(--line))}.sc .m{color:var(--kv-bad,var(--bad))}
-.tw{overflow:auto;-webkit-overflow-scrolling:touch;max-height:75vh;border:1px solid var(--kv-line,var(--line));border-radius:10px;background:var(--kv-card,var(--card))}
-.tw.fsmode{position:fixed;inset:0;z-index:2147480000;max-height:none;border-radius:0}
-.fsb{margin-top:8px}
-body.fsbody .fsb{position:fixed;right:10px;top:8px;z-index:2147480001}
+.tw{overflow-x:auto;overflow-y:visible;-webkit-overflow-scrolling:touch;border:1px solid var(--kv-line,var(--line));border-radius:10px;background:var(--kv-card,var(--card))}
+.tw.fsmode{position:fixed;inset:0;z-index:2147480000;overflow:auto;border-radius:0}
+.fsb{display:block;width:100%;margin:10px 0;padding:14px;font-size:17px;font-weight:700;background:var(--kv-acc,var(--acc));color:var(--kv-acc-ink,var(--acc-ink));border-color:var(--kv-acc,var(--acc));box-shadow:0 3px 10px rgba(0,0,0,.18)}
+body.fsbody .fsb{position:fixed;right:10px;top:8px;width:auto;margin:0;padding:8px 14px;font-size:15px;z-index:2147480001}
 .vt2{border-collapse:separate;border-spacing:0;table-layout:fixed;font-size:13px}
 .vt2 th,.vt2 td{border-right:1px solid var(--kv-line,var(--line));border-bottom:1px solid var(--kv-line,var(--line));padding:2px 4px;text-align:center;background:var(--kv-card,var(--card));line-height:1.25}
 .vt2 th{position:sticky;top:0;z-index:2;font-size:12px}
@@ -232,3 +237,17 @@ html[data-kct-bg="lines"] body{background-image:repeating-linear-gradient(45deg,
     fab.onclick = () => window.kctTheme && kctTheme.toggle(); document.body.appendChild(fab);
   });
 })();
+
+/* ແຈ້ງເຕືອນລຸ່ມສຸດ: ເປີດໃນມືຖືແຕ່ຢູ່ໂໝດ "ເວັບໄຊເທິງເດັສທັອບ" */
+addEventListener("DOMContentLoaded", () => {
+  try {
+    const sw = Math.min(screen.width, screen.height), coarse = matchMedia("(pointer:coarse)").matches || navigator.maxTouchPoints > 1;
+    if (!(coarse && sw <= 600 && innerWidth > sw * 1.3)) return;
+    if (sessionStorage.getItem("kct:deskbar")) return;
+    const k = innerWidth / sw, bar = document.createElement("div");
+    bar.id = "kctDeskBar"; bar.style.fontSize = (15 * k) + "px"; bar.style.padding = (10 * k) + "px " + (12 * k) + "px " + (12 * k) + "px";
+    bar.innerHTML = '<div style="flex:1"><b>📱 ກຳລັງເປີດໃນໂໝດຄອມພິວເຕີ</b>ເພື່ອເບິ່ງງ່າຍຂຶ້ນ ໃຫ້ກົດ ⋮ (3 ຈຸດ) ດ້ານເທິງ → ເລື່ອນຫາ “ເວັບໄຊເທິງເດັສທັອບ” (Desktop site) → <b style="display:inline">ກົດຕິກອອກ</b> ເພື່ອເປີດໂໝດມືຖື</div><button type="button" aria-label="ປິດ">✕</button>';
+    bar.querySelector("button").onclick = () => { bar.remove(); try { sessionStorage.setItem("kct:deskbar", "1"); } catch (e) {} };
+    document.body.appendChild(bar);
+  } catch (e) {}
+});
